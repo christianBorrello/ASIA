@@ -59,6 +59,12 @@ class RAGPipeline:
             query_text, chunks, papers, is_comparison=comparison
         )
 
+        # Capture fallback state immediately after synthesis LLM call,
+        # before verification call resets the flag.
+        used_fallback = getattr(self._llm, "last_used_fallback", False)
+        fallback_model = getattr(self._llm, "_fallback_model", None) if used_fallback else None
+        primary_model = getattr(self._llm, "_model", None) if used_fallback else None
+
         comparison_table = None
         if comparison:
             comparison_table, synthesis = self._extract_comparison_table(synthesis)
@@ -81,7 +87,12 @@ class RAGPipeline:
             "study_count": len(cited_papers),
             "total_sample_size": sum(p.sample_size or 0 for p in cited_papers),
             "papers_analyzed": len(papers),
+            "used_fallback": used_fallback,
         }
+
+        if used_fallback and fallback_model:
+            result["fallback_model"] = fallback_model
+            result["primary_model"] = primary_model
 
         if reflection_note is not None:
             result["reflection_note"] = reflection_note

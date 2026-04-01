@@ -57,7 +57,12 @@ async def submit_query(body: QueryRequest, request: Request):
         "total_sample_size": result.get("total_sample_size"),
         "papers_analyzed": result.get("papers_analyzed"),
         "disclaimer": DISCLAIMER,
+        "used_fallback": result.get("used_fallback", False),
     }
+
+    if result.get("used_fallback"):
+        response["fallback_model"] = result.get("fallback_model")
+        response["primary_model"] = result.get("primary_model")
 
     if "reflection_note" in result:
         response["reflection_note"] = result["reflection_note"]
