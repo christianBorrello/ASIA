@@ -1,3 +1,164 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@layer base {
+  :root {
+    --color-primary: #1e3a5f;
+    --color-primary-light: #2d5a8e;
+    --color-primary-dark: #0f1f33;
+    --color-accent: #c4a35a;
+    --color-accent-light: #e8d5a0;
+    --color-alto: #059669;
+    --color-moderato: #d97706;
+    --color-basso: #dc2626;
+    --color-surface: #f8f7f4;
+    --color-surface-elevated: #ffffff;
+    --color-border: #e5e2db;
+    --color-text: #1a1a1a;
+    --color-text-secondary: #5c5c5c;
+    --color-text-muted: #8a8a8a;
+    --font-serif: 'Source Serif 4', 'Georgia', serif;
+    --font-sans: 'DM Sans', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  html {
+    font-family: var(--font-sans);
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-serif);
+  }
+
+  ::selection {
+    background-color: var(--color-accent-light);
+    color: var(--color-primary-dark);
+  }
+}
+
+@layer components {
+  .evidence-alto {
+    @apply bg-emerald-50 text-emerald-800 border border-emerald-200;
+  }
+  .evidence-moderato {
+    @apply bg-amber-50 text-amber-800 border border-amber-200;
+  }
+  .evidence-basso {
+    @apply bg-red-50 text-red-800 border border-red-200;
+  }
+
+  .card {
+    @apply bg-white rounded-xl border border-[var(--color-border)] shadow-sm;
+  }
+
+  .btn-primary {
+    @apply px-5 py-3 rounded-lg font-medium transition-all duration-200
+           bg-[var(--color-primary)] text-white
+           hover:bg-[var(--color-primary-light)] hover:shadow-md
+           active:scale-[0.98]
+           min-h-[44px] min-w-[44px];
+  }
+
+  .btn-secondary {
+    @apply px-5 py-3 rounded-lg font-medium transition-all duration-200
+           bg-white text-[var(--color-primary)] border border-[var(--color-border)]
+           hover:border-[var(--color-primary)] hover:shadow-sm
+           active:scale-[0.98]
+           min-h-[44px] min-w-[44px];
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 rounded-lg border border-[var(--color-border)]
+           bg-white text-[var(--color-text)]
+           placeholder:text-[var(--color-text-muted)]
+           focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)]
+           transition-all duration-200
+           min-h-[44px];
+  }
+
+  .citation-marker {
+    @apply inline-flex items-center justify-center
+           w-5 h-5 text-xs font-bold rounded
+           bg-[var(--color-primary)] text-white
+           cursor-pointer hover:bg-[var(--color-primary-light)]
+           transition-colors duration-150;
+  }
+
+  .synthesis-text {
+    font-family: var(--font-serif);
+    @apply text-lg leading-relaxed;
+  }
+
+  .body-map-hotspot {
+    @apply absolute w-10 h-10 rounded-full
+           flex items-center justify-center text-lg
+           cursor-pointer transition-all duration-200
+           border-2 border-white/80 shadow-md
+           hover:scale-125 hover:shadow-lg hover:z-10
+           active:scale-110;
+  }
+
+  .body-map-hotspot-active {
+    @apply ring-2 ring-[var(--color-accent)] ring-offset-2;
+  }
+
+  .body-map-hotspot-has-findings {
+    @apply ring-2 ring-emerald-400 ring-offset-1;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Streaming cursor animation */
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+.streaming-cursor::after {
+  content: '▊';
+  animation: blink 0.8s infinite;
+  color: var(--color-primary);
+  margin-left: 2px;
+}
+
+/* Subtle page transitions */
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-page {
+  animation: fadeSlideIn 0.3s ease-out;
+}
+
+/* Stagger children */
+.stagger-children > * {
+  animation: fadeSlideIn 0.4s ease-out both;
+}
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 60ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 120ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 180ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 240ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 300ms; }
+
+/* Noise texture overlay */
+.noise-bg::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  opacity: 0.015;
+  z-index: 100;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
