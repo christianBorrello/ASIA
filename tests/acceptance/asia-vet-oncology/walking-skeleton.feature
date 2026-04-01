@@ -27,7 +27,7 @@ Feature: Walking Skeleton -- One Question, One Answer
 
   # --- Walking Skeleton 2: Citation Verification ---
 
-  @walking_skeleton @US-02 @skip
+  @walking_skeleton @US-02
   Scenario: Veterinarian verifies a citation from the synthesis
     Given Dott.ssa Mancini has received a synthesis with citations for a lymphoma query
     When she views the source panel

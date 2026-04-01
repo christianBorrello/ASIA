@@ -109,6 +109,11 @@ SYNTHESIS_WITH_CITATIONS = (
     "La sopravvivenza mediana e di 10-14 mesi [1]."
 )
 
+SYNTHESIS_CITING_ONLY_FIRST_TWO = (
+    "Il protocollo raccomandato e il CHOP [1][2]. "
+    "La remissione e elevata [1]."
+)
+
 
 @pytest.mark.anyio
 async def test_rag_pipeline_produces_synthesis_with_citations_and_evidence():
@@ -138,6 +143,44 @@ async def test_rag_pipeline_produces_synthesis_with_citations_and_evidence():
         assert "author" in source
         assert "year" in source
         assert "doi" in source
+
+
+@pytest.mark.anyio
+async def test_sources_match_citation_markers_one_to_one():
+    """Source count equals unique citation marker count -- uncited papers excluded."""
+    from asia.services.rag_pipeline import RAGPipeline
+
+    paper1 = _make_paper(title="Cited paper 1", doi="10.1234/cited1")
+    paper2 = _make_paper(title="Cited paper 2", doi="10.1234/cited2")
+    paper3 = _make_paper(title="Uncited paper 3", doi="10.1234/uncited3")
+    chunk1 = _make_chunk(paper1)
+    chunk2 = _make_chunk(paper2)
+    chunk3 = _make_chunk(paper3)
+
+    pipeline = RAGPipeline(
+        llm_provider=StubLLMProvider(SYNTHESIS_CITING_ONLY_FIRST_TWO),
+        embedding_provider=StubEmbeddingProvider(),
+        paper_repository=InMemoryPaperRepository(
+            papers=[paper1, paper2, paper3],
+            chunks=[chunk1, chunk2, chunk3],
+        ),
+    )
+
+    result = await pipeline.execute_query("Test query")
+
+    import re
+    unique_markers = set(re.findall(r"\[(\d+)\]", result["synthesis"]))
+    sources = result["sources"]
+
+    # 1:1 mapping: source count equals unique marker count
+    assert len(sources) == len(unique_markers), (
+        f"Sources ({len(sources)}) != markers ({len(unique_markers)})"
+    )
+    # Every marker has a corresponding source entry
+    source_ids = {str(s["id"]) for s in sources}
+    assert unique_markers.issubset(source_ids), (
+        f"Unmatched markers: {unique_markers - source_ids}"
+    )
 
 
 @pytest.mark.parametrize(

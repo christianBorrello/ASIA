@@ -48,7 +48,7 @@ class RAGPipeline:
 
         evidence_level, evidence_score = compute_evidence_level(cited_papers)
 
-        sources = self._build_sources(chunks, papers)
+        sources = self._build_sources(synthesis, chunks, papers)
 
         return {
             "synthesis": synthesis,
@@ -96,13 +96,17 @@ class RAGPipeline:
 
     def _build_sources(
         self,
+        synthesis: str,
         chunks: list[Chunk],
         papers: dict[uuid.UUID, Paper],
     ) -> list[dict]:
-        """Build source citation objects for the response."""
+        """Build source citation objects only for papers cited in synthesis."""
+        cited_markers = set(re.findall(r"\[(\d+)\]", synthesis))
         sources: list[dict] = []
         seen: set[uuid.UUID] = set()
         for i, chunk in enumerate(chunks, start=1):
+            if str(i) not in cited_markers:
+                continue
             if chunk.paper_id in seen:
                 continue
             seen.add(chunk.paper_id)
