@@ -1,14 +1,16 @@
 export type EvidenceLevel = "ALTO" | "MODERATO" | "BASSO";
 
 export interface Source {
-  citation_id: number;
-  author_display: string;
+  id?: number;
+  citation_id?: number;
+  author?: string;
+  author_display?: string;
   year: number;
   journal: string;
   doi: string | null;
-  study_type: string;
-  sample_size: number | null;
-  title: string;
+  study_type?: string;
+  sample_size?: number | null;
+  title?: string;
 }
 
 export interface QueryResponse {

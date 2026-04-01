@@ -36,21 +36,24 @@ export default function SourcePanel({ sources, activeCitation, onCitationClick }
         </h3>
       </div>
 
-      {sources.map((source) => (
+      {sources.map((source, index) => {
+        const citId = source.citation_id ?? source.id ?? (index + 1);
+        const author = source.author_display || source.author || "Unknown";
+        return (
         <button
-          key={source.citation_id}
-          onClick={() => onCitationClick?.(source.citation_id)}
+          key={citId}
+          onClick={() => onCitationClick?.(citId)}
           className={`w-full text-left px-4 py-3 transition-colors duration-150
             hover:bg-primary/[0.03]
-            ${activeCitation === source.citation_id ? "bg-primary/[0.06] border-l-2 border-l-primary" : ""}`}
+            ${activeCitation === citId ? "bg-primary/[0.06] border-l-2 border-l-primary" : ""}`}
         >
           <div className="flex items-start gap-3">
             <span className="citation-marker shrink-0 mt-0.5">
-              {source.citation_id}
+              {citId}
             </span>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-[var(--color-text)] leading-snug">
-                {source.author_display} ({source.year})
+              <p className="text-sm font-medium text-gray-900 leading-snug">
+                {author} ({source.year})
               </p>
               {source.title && (
                 <p className="text-xs text-[var(--color-text-secondary)] mt-0.5 line-clamp-2 italic">
@@ -87,7 +90,8 @@ export default function SourcePanel({ sources, activeCitation, onCitationClick }
             </div>
           </div>
         </button>
-      ))}
+        );
+      })}
     </div>
   );
 }
