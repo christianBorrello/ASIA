@@ -31,17 +31,22 @@ class RAGPipeline:
         embedding_provider: EmbeddingProvider,
         paper_repository,
         top_k: int = 10,
+        confidence_threshold: float = 0.35,
     ) -> None:
         self._embedder = embedding_provider
         self._repo = paper_repository
         self._synthesis = SynthesisGenerator(llm_provider)
         self._top_k = top_k
+        self._confidence_threshold = confidence_threshold
 
     async def execute_query(self, query_text: str) -> dict:
         """Execute the full RAG pipeline and return structured result."""
         embedding = self._embedder.embed_text(query_text)
 
         chunks: list[Chunk] = await self._repo.find_similar(embedding, self._top_k)
+
+        if self._is_below_confidence(chunks):
+            return self._no_evidence_response()
 
         papers = await self._resolve_papers(chunks)
 
@@ -74,6 +79,40 @@ class RAGPipeline:
             result["comparison_table"] = comparison_table
 
         return result
+
+    def _is_below_confidence(self, chunks: list[Chunk]) -> bool:
+        """Check if max cosine similarity of retrieved chunks is below threshold."""
+        if not chunks:
+            return True
+        similarities = [c.similarity for c in chunks if c.similarity is not None]
+        if not similarities:
+            return False
+        return max(similarities) < self._confidence_threshold
+
+    @staticmethod
+    def _no_evidence_response() -> dict:
+        """Return an honest no-evidence response in Italian."""
+        return {
+            "synthesis": None,
+            "evidence_level": None,
+            "evidence_score": None,
+            "sources": [],
+            "study_count": 0,
+            "total_sample_size": 0,
+            "message": (
+                "Non ho trovato evidenze sufficienti nel corpus "
+                "per rispondere a questa domanda."
+            ),
+            "scope": "linfoma multicentrico canino",
+            "scope_explanation": (
+                "Il corpus attuale copre il linfoma multicentrico canino."
+            ),
+            "suggestions": [
+                "Riformula la domanda usando termini diversi",
+                "Prova una delle domande suggerite nella homepage",
+                "Cerca direttamente su PubMed: pubmed.ncbi.nlm.nih.gov",
+            ],
+        }
 
     @staticmethod
     def _extract_comparison_table(synthesis: str) -> tuple[dict | None, str]:

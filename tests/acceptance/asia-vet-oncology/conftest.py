@@ -10,8 +10,10 @@ Test approach:
 
 from __future__ import annotations
 
+import math
 import uuid
 from collections.abc import AsyncIterator
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -88,7 +90,28 @@ class InMemoryPaperRepository:
     async def find_similar(
         self, embedding: list[float], top_k: int = 10
     ) -> list[Chunk]:
-        return self._chunks[:top_k]
+        scored = []
+        for chunk in self._chunks:
+            sim = self._cosine_similarity(embedding, chunk.embedding)
+            scored.append((chunk, sim))
+        scored.sort(key=lambda x: x[1], reverse=True)
+        top_results = scored[:top_k]
+        if not top_results:
+            return []
+        max_sim = top_results[0][1]
+        results = []
+        for chunk, sim in top_results:
+            results.append(replace(chunk, similarity=sim))
+        return results
+
+    @staticmethod
+    def _cosine_similarity(a: list[float], b: list[float]) -> float:
+        dot = sum(x * y for x, y in zip(a, b))
+        norm_a = math.sqrt(sum(x * x for x in a))
+        norm_b = math.sqrt(sum(x * x for x in b))
+        if norm_a == 0 or norm_b == 0:
+            return 0.0
+        return dot / (norm_a * norm_b)
 
     async def get_by_id(self, paper_id: uuid.UUID) -> Paper | None:
         return self._papers.get(paper_id)

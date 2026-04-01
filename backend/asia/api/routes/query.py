@@ -35,6 +35,18 @@ async def submit_query(body: QueryRequest, request: Request):
     if body.stream:
         return _stream_response(result)
 
+    if result.get("synthesis") is None and "message" in result:
+        return {
+            "query_text": body.text,
+            "synthesis": None,
+            "evidence_level": None,
+            "sources": [],
+            "message": result["message"],
+            "scope_explanation": result.get("scope_explanation", result.get("scope", "")),
+            "suggestions": result.get("suggestions", []),
+            "disclaimer": DISCLAIMER,
+        }
+
     response = {
         "query_text": body.text,
         "synthesis": result["synthesis"],

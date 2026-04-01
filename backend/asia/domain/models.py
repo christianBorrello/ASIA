@@ -46,6 +46,7 @@ class Chunk:
     embedding: list[float]
     token_count: int | None = None
     created_at: datetime | None = None
+    similarity: float | None = None
 
 
 @dataclass

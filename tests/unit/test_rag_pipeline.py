@@ -356,3 +356,51 @@ async def test_non_comparison_query_has_no_comparison_table():
     result = await pipeline.execute_query("Qual e il protocollo di prima linea?")
 
     assert result.get("comparison_table") is None
+
+
+# ---------------------------------------------------------------------------
+# Out-of-scope / confidence threshold tests (Step 02-10)
+# Test Budget: 2 behaviors x 2 = 4 max | Actual: 1 test
+# Behavior 1: low similarity -> no-evidence response
+# Behavior 2: high similarity -> normal synthesis (covered by existing tests)
+# ---------------------------------------------------------------------------
+
+
+def _make_chunk_with_similarity(paper: Paper, similarity: float) -> Chunk:
+    chunk = _make_chunk(paper)
+    chunk.similarity = similarity
+    return chunk
+
+
+@pytest.mark.anyio
+async def test_out_of_scope_query_returns_no_evidence_when_below_threshold():
+    """RAGPipeline returns no-evidence response when max similarity < CONFIDENCE_THRESHOLD."""
+    from asia.services.rag_pipeline import RAGPipeline
+
+    paper1 = _make_paper(title="Canine lymphoma CHOP", doi="10.1234/chop1")
+    # Low similarity = out of scope
+    chunk1 = _make_chunk_with_similarity(paper1, similarity=0.15)
+
+    pipeline = RAGPipeline(
+        llm_provider=StubLLMProvider(SYNTHESIS_WITH_CITATIONS),
+        embedding_provider=StubEmbeddingProvider(),
+        paper_repository=InMemoryPaperRepository(
+            papers=[paper1],
+            chunks=[chunk1],
+        ),
+        confidence_threshold=0.35,
+    )
+
+    result = await pipeline.execute_query("carcinoma polmonare felino")
+
+    # No-evidence response structure
+    assert result.get("synthesis") is None
+    assert result.get("sources") == [] or result.get("sources") is None
+    assert result.get("evidence_level") is None
+    assert "message" in result
+    assert "evidenze" in result["message"].lower()
+    assert "scope" in result or "scope_explanation" in result
+    scope = result.get("scope", result.get("scope_explanation", ""))
+    assert "linfoma" in scope.lower()
+    assert "suggestions" in result
+    assert len(result["suggestions"]) >= 1

@@ -89,7 +89,7 @@ Feature: Milestone 1 -- Demo Ready
 
   # ===== US-05: Graceful Error Handling =====
 
-  @US-05 @skip
+  @US-05
   Scenario: Out-of-scope query returns an honest no-evidence message
     Given Dott.ssa Mancini submits "Trattamento osteosarcoma felino"
     When the evidence search finds no relevant papers
