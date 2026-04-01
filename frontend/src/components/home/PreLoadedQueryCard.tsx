@@ -15,7 +15,8 @@ const TOPIC_ICONS: Record<string, string> = {
   dose: "\u{1F9EA}",
 };
 
-function getIcon(label: string): string {
+function getIcon(label?: string): string {
+  if (!label) return "\u{1F52C}";
   for (const [key, icon] of Object.entries(TOPIC_ICONS)) {
     if (label.toLowerCase().includes(key)) return icon;
   }

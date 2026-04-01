@@ -55,30 +55,30 @@
   }
 
   .card {
-    @apply bg-white rounded-xl border border-[var(--color-border)] shadow-sm;
+    @apply bg-white rounded-xl border border-gray-200 shadow-sm;
   }
 
   .btn-primary {
     @apply px-5 py-3 rounded-lg font-medium transition-all duration-200
-           bg-[var(--color-primary)] text-white
-           hover:bg-[var(--color-primary-light)] hover:shadow-md
+           bg-primary text-white
+           hover:bg-primary-light hover:shadow-md
            active:scale-[0.98]
            min-h-[44px] min-w-[44px];
   }
 
   .btn-secondary {
     @apply px-5 py-3 rounded-lg font-medium transition-all duration-200
-           bg-white text-[var(--color-primary)] border border-[var(--color-border)]
-           hover:border-[var(--color-primary)] hover:shadow-sm
+           bg-white text-primary border border-gray-200
+           hover:border-primary hover:shadow-sm
            active:scale-[0.98]
            min-h-[44px] min-w-[44px];
   }
 
   .input-field {
-    @apply w-full px-4 py-3 rounded-lg border border-[var(--color-border)]
-           bg-white text-[var(--color-text)]
-           placeholder:text-[var(--color-text-muted)]
-           focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)]
+    @apply w-full px-4 py-3 rounded-lg border border-gray-200
+           bg-white text-gray-900
+           placeholder:text-gray-400
+           focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary
            transition-all duration-200
            min-h-[44px];
   }
@@ -86,8 +86,8 @@
   .citation-marker {
     @apply inline-flex items-center justify-center
            w-5 h-5 text-xs font-bold rounded
-           bg-[var(--color-primary)] text-white
-           cursor-pointer hover:bg-[var(--color-primary-light)]
+           bg-primary text-white
+           cursor-pointer hover:bg-primary-light
            transition-colors duration-150;
   }
 
@@ -106,7 +106,7 @@
   }
 
   .body-map-hotspot-active {
-    @apply ring-2 ring-[var(--color-accent)] ring-offset-2;
+    @apply ring-2 ring-accent ring-offset-2;
   }
 
   .body-map-hotspot-has-findings {
