@@ -24,62 +24,17 @@ export default function BodyMap({ findings = {}, onSystemClick, activeSystem }: 
       </h3>
 
       {/* Dog silhouette with hotspots */}
-      <div className="relative w-full aspect-[5/3] bg-gradient-to-b from-primary/[0.02] to-primary/[0.05] rounded-xl overflow-hidden border border-gray-200">
-        {/* Dog silhouette SVG — side view, head RIGHT, tail LEFT */}
-        <svg
-          viewBox="0 0 500 300"
-          className="absolute inset-0 w-full h-full p-4"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          {/* Body */}
-          <ellipse cx="250" cy="145" rx="130" ry="60" className="fill-primary/[0.07] stroke-primary/20" strokeWidth="1.5" />
+      <div className="relative w-full aspect-square bg-gradient-to-b from-primary/[0.02] to-primary/[0.04] rounded-xl overflow-hidden border border-gray-200">
+        {/* Dog SVG as background image */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/dog-silhouette.svg"
+          alt="Silhouette anatomica cane"
+          className="absolute inset-0 w-full h-full object-contain p-4 pointer-events-none select-none"
+          draggable={false}
+        />
 
-          {/* Neck */}
-          <path d="M370 120 Q390 100, 400 80 Q405 70, 410 75 Q415 80, 410 95 Q400 115, 385 130"
-            className="fill-primary/[0.07] stroke-primary/20" strokeWidth="1.5" />
-
-          {/* Head */}
-          <ellipse cx="420" cy="68" rx="35" ry="28" className="fill-primary/[0.07] stroke-primary/20" strokeWidth="1.5" />
-
-          {/* Muzzle */}
-          <ellipse cx="452" cy="75" rx="18" ry="12" className="fill-primary/[0.07] stroke-primary/20" strokeWidth="1.5" />
-
-          {/* Nose */}
-          <circle cx="468" cy="73" r="4" className="fill-primary/30" />
-
-          {/* Eye */}
-          <circle cx="430" cy="62" r="4" className="fill-primary/30" />
-
-          {/* Ear */}
-          <path d="M405 48 Q398 25, 410 20 Q420 18, 422 35 Q423 45, 418 50"
-            className="fill-primary/[0.10] stroke-primary/20" strokeWidth="1.5" />
-
-          {/* Front leg left */}
-          <path d="M340 185 Q338 210, 340 240 Q341 255, 348 258 Q355 260, 355 255 Q354 245, 350 240 Q348 220, 350 200"
-            className="fill-primary/[0.05] stroke-primary/20" strokeWidth="1.5" />
-
-          {/* Front leg right */}
-          <path d="M360 185 Q358 215, 360 240 Q361 255, 368 258 Q375 260, 375 255 Q374 245, 370 240 Q368 220, 370 200"
-            className="fill-primary/[0.05] stroke-primary/20" strokeWidth="1.5" />
-
-          {/* Hind leg left */}
-          <path d="M155 175 Q145 195, 140 215 Q135 235, 138 250 Q140 258, 148 260 Q155 260, 155 252 Q153 240, 155 225 Q160 205, 165 190"
-            className="fill-primary/[0.05] stroke-primary/20" strokeWidth="1.5" />
-
-          {/* Hind leg right */}
-          <path d="M170 180 Q162 200, 158 220 Q154 240, 157 252 Q159 260, 167 262 Q174 262, 174 254 Q172 242, 174 228 Q178 208, 182 195"
-            className="fill-primary/[0.05] stroke-primary/20" strokeWidth="1.5" />
-
-          {/* Tail */}
-          <path d="M120 130 Q90 110, 75 85 Q68 72, 72 68"
-            fill="none" className="stroke-primary/20" strokeWidth="3" strokeLinecap="round" />
-
-          {/* Belly line */}
-          <path d="M170 195 Q250 205, 340 195"
-            fill="none" className="stroke-primary/10" strokeWidth="1" strokeDasharray="4 4" />
-        </svg>
-
-        {/* Hotspots */}
+        {/* Hotspots positioned over the dog */}
         {BODY_SYSTEMS.map((system) => {
           const hasFinding = (findings[system.id]?.length || 0) > 0;
           const isActive = activeSystem === system.id;
