@@ -120,7 +120,7 @@ Feature: Milestone 1 -- Demo Ready
     And a transparency note explains that a citation was removed for quality assurance
     And the final response contains only verified citations
 
-  @US-05 @skip
+  @US-05
   Scenario: Error messages are in Italian and suggest next steps
     Given Dott.ssa Mancini encounters an error during query processing
     When the error message is displayed
