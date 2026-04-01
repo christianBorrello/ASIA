@@ -73,6 +73,7 @@ class RAGPipeline:
             "sources": sources,
             "study_count": len(cited_papers),
             "total_sample_size": sum(p.sample_size or 0 for p in cited_papers),
+            "papers_analyzed": len(papers),
         }
 
         if comparison_table is not None:

@@ -55,6 +55,7 @@ async def submit_query(body: QueryRequest, request: Request):
         "sources": result["sources"],
         "study_count": result.get("study_count"),
         "total_sample_size": result.get("total_sample_size"),
+        "papers_analyzed": result.get("papers_analyzed"),
         "disclaimer": DISCLAIMER,
     }
 
