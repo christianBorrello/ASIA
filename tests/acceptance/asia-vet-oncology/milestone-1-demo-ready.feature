@@ -13,7 +13,7 @@ Feature: Milestone 1 -- Demo Ready
 
   # ===== US-03: Pre-loaded Clinical Queries =====
 
-  @US-03 @skip
+  @US-03
   Scenario: Homepage displays five pre-loaded clinical queries as clickable cards
     Given Dott.ssa Mancini opens the ASIA homepage
     When the page finishes loading
