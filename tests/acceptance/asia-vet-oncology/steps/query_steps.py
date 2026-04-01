@@ -118,9 +118,19 @@ def corpus_has_no_papers_for(query_text):
     "the evidence pipeline generates a draft synthesis with 5 citations",
     target_fixture="draft_with_removals",
 )
-def draft_with_five_citations(mock_llm_responses):
-    """Use the citation_removed mock response."""
-    return mock_llm_responses["citation_removed"]
+def draft_with_five_citations(test_client, seeded_corpus):
+    """Submit a verification-trigger query through the driving port.
+
+    The FakeLLM returns a synthesis with 5 citations for this query,
+    then returns a verification response marking one as NON_SUPPORTA.
+    The CitationVerifier in the pipeline removes it.
+    """
+    response = test_client.post(
+        "/api/query",
+        json={"text": "Verifica citazioni protocollo CHOP linfoma"},
+    )
+    assert response.status_code == 200
+    return response.json()
 
 
 @given("Dott.ssa Mancini encounters an error during query processing")
@@ -227,7 +237,11 @@ def submit_out_of_scope(test_client, out_of_scope_query):
     target_fixture="verified_response",
 )
 def verification_removes_citation(draft_with_removals):
-    """Verification behavior is pre-canned in mock LLM response."""
+    """Verification already happened in the pipeline during the Given step.
+
+    The API response already contains the verified synthesis with
+    unsupported citations removed by the CitationVerifier.
+    """
     return draft_with_removals
 
 
@@ -600,10 +614,19 @@ def estimated_time():
 
 @then("that citation is removed from the final response")
 def citation_removed(verified_response):
-    """Verify citation count reduced."""
-    assert (
-        verified_response["final_citation_count"]
-        < verified_response["original_citation_count"]
+    """Verify the synthesis has fewer citations after verification.
+
+    The original synthesis had 5 citations [1]-[5].
+    After verification, the NON_SUPPORTA citation should be removed.
+    """
+    import re
+
+    synthesis = verified_response.get("synthesis", "")
+    markers = set(re.findall(r"\[(\d+)\]", synthesis))
+    # Original had 5, one removed means max marker should be 4
+    assert len(markers) <= 4, (
+        f"Expected at most 4 unique citation markers after removal, "
+        f"got {len(markers)}: {markers}"
     )
 
 
@@ -611,15 +634,19 @@ def citation_removed(verified_response):
     "a transparency note explains that a citation was removed for quality assurance"
 )
 def transparency_note(verified_response):
-    """Verify transparency note is present."""
-    note = verified_response.get("transparency_note", "")
-    assert "rimossa" in note.lower() or "removed" in note.lower()
+    """Verify transparency note is present in the API response."""
+    note = verified_response.get("reflection_note", "")
+    assert len(note) > 0, "No reflection_note in response"
+    assert "rimossa" in note.lower() or "removed" in note.lower() or "rimoss" in note.lower(), (
+        f"Transparency note does not mention removal: {note}"
+    )
 
 
 @then("the final response contains only verified citations")
 def only_verified_citations(verified_response):
-    """Verify final count is less than original."""
-    assert verified_response["final_citation_count"] >= 1
+    """Verify the response still contains citations (not all removed)."""
+    sources = verified_response.get("sources", [])
+    assert len(sources) >= 1, "All citations were removed -- at least one should remain"
 
 
 @then("the message is in Italian")

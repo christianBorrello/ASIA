@@ -10,6 +10,7 @@ from asia.domain.models import Chunk, Paper
 from asia.domain.query_types import is_comparison_query
 from asia.ports.embedding_provider import EmbeddingProvider
 from asia.ports.llm_provider import LLMProvider
+from asia.services.citation_verifier import CitationVerifier
 from asia.services.synthesis_generator import SynthesisGenerator
 
 
@@ -35,7 +36,9 @@ class RAGPipeline:
     ) -> None:
         self._embedder = embedding_provider
         self._repo = paper_repository
+        self._llm = llm_provider
         self._synthesis = SynthesisGenerator(llm_provider)
+        self._verifier = CitationVerifier(llm_provider)
         self._top_k = top_k
         self._confidence_threshold = confidence_threshold
 
@@ -60,6 +63,10 @@ class RAGPipeline:
         if comparison:
             comparison_table, synthesis = self._extract_comparison_table(synthesis)
 
+        verification = await self._verifier.verify(synthesis, chunks, papers)
+        synthesis = verification["synthesis"]
+        reflection_note = verification["reflection_note"]
+
         cited_papers = self._extract_cited_papers(synthesis, chunks, papers)
 
         evidence_level, evidence_score = compute_evidence_level(cited_papers)
@@ -75,6 +82,9 @@ class RAGPipeline:
             "total_sample_size": sum(p.sample_size or 0 for p in cited_papers),
             "papers_analyzed": len(papers),
         }
+
+        if reflection_note is not None:
+            result["reflection_note"] = reflection_note
 
         if comparison_table is not None:
             result["comparison_table"] = comparison_table

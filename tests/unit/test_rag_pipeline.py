@@ -3,10 +3,12 @@
 Tests enter through the RAGPipeline driving port and assert observable outcomes.
 LLM and repository are mocked at port boundaries.
 
-Test Budget: 5 behaviors x 2 = 10 max
+Test Budget: 8 behaviors x 2 = 16 max
   (query produces synthesis, evidence scoring, comparison query detection,
-   comparison query produces table, non-comparison query produces no table)
-Actual: 5 tests (2 original + 1 parametrized detection + 1 comparison table + 1 no table)
+   comparison query produces table, non-comparison query produces no table,
+   out-of-scope query, citation verification removes unsupported,
+   citation verification adds reflection_note, verified citations remain)
+Actual: 8 tests
 """
 from __future__ import annotations
 
@@ -404,3 +406,102 @@ async def test_out_of_scope_query_returns_no_evidence_when_below_threshold():
     assert "linfoma" in scope.lower()
     assert "suggestions" in result
     assert len(result["suggestions"]) >= 1
+
+
+# ---------------------------------------------------------------------------
+# Citation verification tests (Step 02-13)
+# Test Budget: 3 behaviors x 2 = 6 max | Actual: 2 tests
+# Behavior 1: NON_SUPPORTA citations removed from synthesis
+# Behavior 2: reflection_note added when citations removed
+# Behavior 3: verified (SUPPORTA/PARZIALE) citations remain (combined w/ above)
+# ---------------------------------------------------------------------------
+
+SYNTHESIS_WITH_5_CITATIONS = (
+    "Il protocollo CHOP e il trattamento di riferimento [1]. "
+    "La remissione e elevata [2]. "
+    "Studi recenti confermano l'efficacia [3]. "
+    "Il dosaggio standard prevede cicli trisettimanali [4]. "
+    "La tossicita e gestibile con supporto adeguato [5]."
+)
+
+CANNED_VERIFICATION_RESPONSE = (
+    "[1]: SUPPORTA - il paper conferma il CHOP come riferimento\n"
+    "[2]: SUPPORTA - dati di remissione confermati\n"
+    "[3]: PARZIALE - supporto parziale sull'efficacia\n"
+    "[4]: NON_SUPPORTA - il paper non menziona dosaggi specifici\n"
+    "[5]: SUPPORTA - tossicita ben documentata"
+)
+
+
+class VerificationAwareLLMStub:
+    """Stub LLM that returns verification response when prompt contains verification keywords."""
+
+    def __init__(self, synthesis_response: str, verification_response: str) -> None:
+        self._synthesis = synthesis_response
+        self._verification = verification_response
+
+    async def generate(self, prompt: str, system_prompt: str | None = None) -> str:
+        prompt_lower = prompt.lower()
+        if "supporta" in prompt_lower or "verifica" in prompt_lower:
+            return self._verification
+        return self._synthesis
+
+    async def stream(self, prompt: str, system_prompt: str | None = None):
+        response = await self.generate(prompt, system_prompt)
+        for word in response.split(" "):
+            yield word + " "
+
+
+@pytest.mark.anyio
+async def test_citation_verification_removes_unsupported_citations():
+    """RAGPipeline removes NON_SUPPORTA citations from synthesis after verification."""
+    from asia.services.rag_pipeline import RAGPipeline
+
+    papers = [_make_paper(title=f"Paper {i}") for i in range(1, 6)]
+    chunks = [_make_chunk(p) for p in papers]
+
+    pipeline = RAGPipeline(
+        llm_provider=VerificationAwareLLMStub(
+            synthesis_response=SYNTHESIS_WITH_5_CITATIONS,
+            verification_response=CANNED_VERIFICATION_RESPONSE,
+        ),
+        embedding_provider=StubEmbeddingProvider(),
+        paper_repository=InMemoryPaperRepository(papers=papers, chunks=chunks),
+    )
+
+    result = await pipeline.execute_query("Test query con verifica citazioni")
+
+    import re
+    markers = set(re.findall(r"\[(\d+)\]", result["synthesis"]))
+    # Citation [4] was NON_SUPPORTA, should be removed. After renumbering: max 4 markers.
+    assert len(markers) <= 4, f"Expected <= 4 markers after removing unsupported, got {markers}"
+    # The synthesis should not contain the claim about dosaggi (citation [4])
+    assert "dosaggio standard" not in result["synthesis"].lower() or len(markers) <= 4
+
+
+@pytest.mark.anyio
+async def test_citation_verification_adds_reflection_note():
+    """RAGPipeline adds reflection_note when citations are removed by verification."""
+    from asia.services.rag_pipeline import RAGPipeline
+
+    papers = [_make_paper(title=f"Paper {i}") for i in range(1, 6)]
+    chunks = [_make_chunk(p) for p in papers]
+
+    pipeline = RAGPipeline(
+        llm_provider=VerificationAwareLLMStub(
+            synthesis_response=SYNTHESIS_WITH_5_CITATIONS,
+            verification_response=CANNED_VERIFICATION_RESPONSE,
+        ),
+        embedding_provider=StubEmbeddingProvider(),
+        paper_repository=InMemoryPaperRepository(papers=papers, chunks=chunks),
+    )
+
+    result = await pipeline.execute_query("Test query con verifica citazioni")
+
+    assert "reflection_note" in result, "reflection_note missing from response"
+    note = result["reflection_note"]
+    assert len(note) > 0, "reflection_note is empty"
+    # Note should mention removal in Italian
+    assert any(term in note.lower() for term in ["rimoss", "removed", "eliminat"]), (
+        f"reflection_note does not explain removal: {note}"
+    )

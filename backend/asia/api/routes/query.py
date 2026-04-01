@@ -59,6 +59,9 @@ async def submit_query(body: QueryRequest, request: Request):
         "disclaimer": DISCLAIMER,
     }
 
+    if "reflection_note" in result:
+        response["reflection_note"] = result["reflection_note"]
+
     if "comparison_table" in result:
         response["comparison_table"] = result["comparison_table"]
 

@@ -112,7 +112,7 @@ Feature: Milestone 1 -- Demo Ready
     Then a progress indicator appears showing papers being analyzed
     And an estimated completion time is displayed
 
-  @US-05 @skip
+  @US-05
   Scenario: Self-reflective verification removes an unsupported citation
     Given the evidence pipeline generates a draft synthesis with 5 citations
     When the verification pass detects that one citation does not support its claim

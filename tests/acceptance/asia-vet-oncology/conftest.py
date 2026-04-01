@@ -33,11 +33,30 @@ FEATURE_DIR = Path(__file__).parent
 # ---------------------------------------------------------------------------
 
 
+CANNED_VERIFICATION_SYNTHESIS = (
+    "Il protocollo CHOP e il trattamento di riferimento [1]. "
+    "La remissione e elevata [2]. "
+    "Studi recenti confermano l'efficacia [3]. "
+    "Il dosaggio standard prevede cicli trisettimanali [4]. "
+    "La tossicita e gestibile con supporto adeguato [5]."
+)
+
+CANNED_VERIFICATION_RESPONSE = (
+    "[1]: SUPPORTA - il paper conferma il CHOP come riferimento\n"
+    "[2]: SUPPORTA - dati di remissione confermati\n"
+    "[3]: PARZIALE - supporto parziale sull'efficacia\n"
+    "[4]: NON_SUPPORTA - il paper non menziona dosaggi specifici\n"
+    "[5]: SUPPORTA - tossicita ben documentata"
+)
+
+
 class FakeLLMProvider:
     """Returns pre-canned synthesis text for deterministic testing.
 
     Routes responses based on query content keywords so each
     pre-loaded query receives a clinically appropriate canned response.
+    When prompt contains verification keywords (SUPPORTA, verifica +
+    classifica), returns canned verification response.
     """
 
     def __init__(self, default_response: str, query_responses: dict[str, str] | None = None) -> None:
@@ -46,6 +65,9 @@ class FakeLLMProvider:
 
     def _select_response(self, prompt: str) -> str:
         prompt_lower = prompt.lower()
+        # Verification prompt detection: contains classification keywords
+        if "supporta" in prompt_lower and "non_supporta" in prompt_lower:
+            return CANNED_VERIFICATION_RESPONSE
         for keyword, response in self._query_responses.items():
             if keyword in prompt_lower:
                 return response
@@ -197,6 +219,7 @@ QUERY_RESPONSES = {
     "prognosi linfoma t-cell": CANNED_Q4_SYNTHESIS,
     "aggiustamento dose": CANNED_Q5_SYNTHESIS,
     "chop-19 vs chop-25": CANNED_Q2_SYNTHESIS,
+    "verifica citazioni": CANNED_VERIFICATION_SYNTHESIS,
 }
 
 
