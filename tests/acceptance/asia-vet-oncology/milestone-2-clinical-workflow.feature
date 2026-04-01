@@ -26,7 +26,7 @@ Feature: Milestone 2 -- Clinical Workflow
     Then the case "Rex" is created successfully
     And optional fields are stored as empty
 
-  @US-06 @skip
+  @US-06
   Scenario: Query within a case automatically includes patient context
     Given Dott.ssa Mancini has created the case "Luna" with breed "Golden Retriever", age "7 anni", diagnosis "Linfoma multicentrico B-cell", and stage "IIIa"
     When she submits the query "Qual e il protocollo migliore?" within Luna's case

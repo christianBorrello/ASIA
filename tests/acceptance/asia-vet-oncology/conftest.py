@@ -181,6 +181,12 @@ class InMemoryCaseRepository:
     async def get(self, case_id: uuid.UUID) -> Case | None:
         return self._cases.get(case_id)
 
+    async def add_query(self, case_id: uuid.UUID, query: CaseQuery) -> CaseQuery:
+        if case_id not in self._queries:
+            self._queries[case_id] = []
+        self._queries[case_id].append(query)
+        return query
+
     async def list_queries(self, case_id: uuid.UUID) -> list[CaseQuery]:
         return self._queries.get(case_id, [])
 
@@ -281,7 +287,7 @@ def app(paper_repo, case_repo):
     )
 
     fastapi_app.state.rag_pipeline = rag_pipeline
-    fastapi_app.state.case_service = CaseService(case_repo)
+    fastapi_app.state.case_service = CaseService(case_repo, rag_pipeline)
 
     return fastapi_app
 
