@@ -1,0 +1,233 @@
+journey:
+  name: "Veterinary Clinical Query"
+  goal: "Get evidence-based treatment recommendation for canine lymphoma in Italian with verifiable citations"
+  persona: "Dott.ssa Giulia Mancini -- Italian general practice vet, 8 years experience, 3-5 oncology cases/month, reads English with difficulty"
+
+  emotional_arc:
+    start: "Skeptical, time-pressed, anxious about patient"
+    middle: "Focused, building trust through verifiable citations"
+    end: "Satisfied, confident enough to act on the evidence"
+
+  context:
+    domain: "Canine multicentric lymphoma (B-cell and T-cell)"
+    language: "Italian interface and synthesis, English source papers"
+    platform: "Web application, tablet-first, responsive"
+    constraint_cost: "EUR 0 operating costs (Groq free tier)"
+    constraint_auth: "No authentication for MVP (controlled demo)"
+
+steps:
+  - id: 1
+    name: "Arrive -- Homepage First Impression"
+    action: "Vet opens ASIA homepage for the first time"
+
+    elements:
+      - logo_and_tagline: "ASIA -- Aggregated Scientific Intelligence for Animals"
+      - search_box: "Free-text clinical query input"
+      - pre_loaded_queries: "5 pre-loaded clinical queries as clickable cards"
+      - case_mode_cta: "Crea nuovo caso button"
+      - explain_paper_cta: "Explain a Paper button"
+      - disclaimer: "Always visible, never dismissible"
+      - corpus_date: "Letteratura indicizzata fino a: marzo 2026"
+
+    shared_artifacts:
+      - name: "disclaimer_text"
+        source: "backend config / constants"
+        displayed_as: "ASIA e un supporto alla decisione clinica. Non sostituisce il giudizio del veterinario."
+        consumers: ["homepage", "response page", "case page", "explain paper page"]
+      - name: "corpus_date"
+        source: "ingestion pipeline metadata"
+        displayed_as: "Corpus aggiornato al: marzo 2026"
+        consumers: ["homepage footer", "response page footer"]
+      - name: "pre_loaded_queries"
+        source: "backend config / seed data"
+        displayed_as: "5 clickable query cards"
+        consumers: ["homepage"]
+
+    emotional_state:
+      entry: "Skeptical -- another AI tool? Time-pressed with a real patient"
+      exit: "Curious -- pre-loaded queries lower the barrier, clean design is professional"
+
+    design_levers:
+      - "Pre-loaded queries provide safe entry point (no risk of bad query)"
+      - "Professional, clean design signals seriousness (not a toy)"
+      - "Disclaimer visible from the start builds trust through honesty"
+      - "Tablet-first layout for clinic use"
+
+    integration_checkpoint: |
+      Homepage renders with all 5 pre-loaded queries.
+      Disclaimer is visible without scrolling.
+      Search box is functional and accepts Italian text.
+
+  - id: 2
+    name: "Query -- Type or Click"
+    action: "Vet types a question or clicks a pre-loaded query"
+
+    paths:
+      happy: "Clicks pre-loaded query (demo-safe path)"
+      alternative: "Types free-text query in Italian"
+
+    shared_artifacts:
+      - name: "query_text"
+        source: "user input or pre-loaded query config"
+        displayed_as: "Query shown at top of response page"
+        consumers: ["response page header", "case history", "RAG pipeline input"]
+
+    emotional_state:
+      entry: "Curious -- let me try one of these"
+      exit: "Engaged -- streaming response starts immediately"
+
+    design_levers:
+      - "Response within 100ms (streaming starts)"
+      - "Loading indicator shows real work happening"
+      - "Query text persisted at top of response page for context"
+
+    integration_checkpoint: |
+      Query is sent to RAG pipeline.
+      Streaming response begins within 5 seconds.
+      Loading indicator visible immediately.
+
+  - id: 3
+    name: "Read -- Streaming Response in Italian"
+    action: "Vet reads the synthesized answer as it streams in"
+
+    response_structure:
+      - synthesis: "2-3 sentence summary in Italian with inline citations [1][2]"
+      - evidence_indicator: "Level (ALTO/MODERATO/BASSO), study count, study types, total sample size"
+      - source_panel: "Expandable list: author, year, journal, study type, n, DOI link per citation"
+      - comparison_table: "Auto-generated when query involves protocol comparison"
+      - disclaimer: "Persistent at bottom of every response"
+
+    shared_artifacts:
+      - name: "synthesis_text"
+        source: "RAG pipeline output (LLM synthesis)"
+        displayed_as: "Italian synthesis with [n] citation markers"
+        consumers: ["response page", "case history"]
+      - name: "citations"
+        source: "RAG pipeline retrieval + verification"
+        displayed_as: "Source panel entries with DOI links"
+        consumers: ["response page source panel", "explain paper input"]
+      - name: "evidence_level"
+        source: "RAG pipeline scoring (study type x count x sample size)"
+        displayed_as: "ALTO / MODERATO / BASSO indicator"
+        consumers: ["response page evidence badge"]
+      - name: "comparison_table"
+        source: "RAG pipeline structured extraction"
+        displayed_as: "Protocol comparison table (when applicable)"
+        consumers: ["response page"]
+
+    emotional_state:
+      entry: "Engaged -- words appearing on screen"
+      exit: "Focused -- the answer makes clinical sense, citations are specific"
+
+    design_levers:
+      - "Streaming SSE makes response feel alive, not a wall of text"
+      - "Sentence-level citations signal precision (not vague references)"
+      - "Evidence level badge gives quick confidence calibration"
+      - "Italian medical terminology must be natural, not machine-translated"
+
+    integration_checkpoint: |
+      Synthesis renders in Italian with correct medical terminology.
+      Each citation marker [n] links to a source in the panel.
+      Evidence level is computed and displayed.
+      Comparison table appears for comparison queries (Q2).
+      Disclaimer is visible.
+
+  - id: 4
+    name: "Verify -- Check Citations and Evidence"
+    action: "Vet clicks a DOI link or reviews source details"
+
+    paths:
+      verify_external: "Clicks DOI link, opens paper on journal site in new tab"
+      verify_inline: "Reads source panel details (author, study type, n, year)"
+      explain_paper: "Clicks 'Explain This Paper' to get structured clinical summary"
+
+    shared_artifacts:
+      - name: "doi_urls"
+        source: "PubMed / Semantic Scholar ingestion metadata"
+        displayed_as: "Clickable DOI links in source panel"
+        consumers: ["source panel", "explain paper"]
+
+    emotional_state:
+      entry: "Building trust -- let me check if these citations are real"
+      exit: "Trusting -- citations verified, claims match sources"
+
+    design_levers:
+      - "DOI links open in new tab (vet does not lose her place)"
+      - "Source panel shows enough metadata to assess without clicking"
+      - "Explain This Paper provides deeper dive without leaving ASIA"
+
+    integration_checkpoint: |
+      All DOI links resolve to real papers.
+      Citation claims match source paper content.
+      No hallucinated citations present.
+
+  - id: 5
+    name: "Decide -- Confident Enough to Act"
+    action: "Vet has enough information to discuss with owner or proceed with treatment"
+
+    paths:
+      follow_up_query: "Types another question"
+      create_case: "Creates a case and associates query"
+      explain_paper: "Requests clinical summary of a cited paper"
+      share_with_owner: "Uses the information in owner communication"
+      exit: "Closes ASIA, has what she needs"
+
+    shared_artifacts:
+      - name: "case_data"
+        source: "case creation form input"
+        displayed_as: "Case header (name, breed, age, diagnosis, stage, immunophenotype)"
+        consumers: ["case page header", "RAG context injection", "case query history"]
+
+    emotional_state:
+      entry: "Trusting -- verified evidence, clear synthesis"
+      exit: "Satisfied -- saved time, has verifiable evidence to support clinical decision"
+
+    design_levers:
+      - "Case creation is optional, not forced"
+      - "Query history in case provides continuity across visits"
+      - "Context injection makes follow-up queries more specific automatically"
+
+    integration_checkpoint: |
+      Case creation form accepts all required fields.
+      Saved queries appear in case history.
+      Context injection includes case data in subsequent RAG queries.
+
+error_paths:
+  - id: "E1"
+    name: "No Evidence Found"
+    trigger: "Query falls outside corpus or retrieval returns insufficient results"
+    response: "Honest message: no sufficient evidence found + reasons + suggestions (rephrase, try pre-loaded, PubMed link)"
+    emotional_impact: "Disappointment mitigated by honesty and helpful suggestions"
+
+  - id: "E2"
+    name: "Slow Response"
+    trigger: "RAG pipeline takes >10 seconds"
+    response: "Progress indicator with paper count and estimated time"
+    emotional_impact: "Anxiety reduced by showing real work is happening"
+
+  - id: "E3"
+    name: "Citation Mismatch Detected"
+    trigger: "Self-reflective RAG detects hallucinated citation"
+    response: "Transparent note that a citation was removed; synthesis reflects only verified sources"
+    emotional_impact: "Trust maintained through transparency about self-correction"
+
+  - id: "E4"
+    name: "Streaming Connection Lost"
+    trigger: "SSE connection drops during response"
+    response: "Partial response preserved with option to retry"
+    emotional_impact: "Frustration minimized by not losing already-received content"
+
+integration_validation:
+  shared_artifact_consistency:
+    - artifact: "disclaimer_text"
+      must_match_across: [1, 3, 5]
+      failure_message: "Disclaimer text must be identical on homepage, response page, and case page"
+    - artifact: "corpus_date"
+      must_match_across: [1, 3]
+      failure_message: "Corpus date must match between homepage and response page"
+    - artifact: "query_text"
+      must_match_across: [2, 3]
+      failure_message: "Query displayed on response page must exactly match what was submitted"
+    - artifact: "citations"
+      must_match_across: [3, 4]
+      failure_message: "Citation markers in synthesis must correspond 1:1 with source panel entries"

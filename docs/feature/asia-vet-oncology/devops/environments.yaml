@@ -1,0 +1,86 @@
+# Environment Inventory -- ASIA Vet Oncology MVP
+# For DISTILL wave handoff
+
+feature_id: asia-vet-oncology
+date: 2026-04-01
+
+environments:
+  local-dev:
+    name: Local Development
+    purpose: Development and demo
+    type: local
+    host: MacBook Air M1 (8GB RAM)
+    orchestration: Docker Compose
+    services:
+      - name: frontend
+        image: asia-frontend (local build)
+        port: 3000
+        memory_limit: 384MB
+        technology: Next.js 14+ / TypeScript
+      - name: api
+        image: asia-api (local build)
+        port: 8000
+        memory_limit: 1536MB
+        technology: FastAPI / Python 3.12
+      - name: db
+        image: pgvector/pgvector:pg16
+        port: 5432
+        memory_limit: 512MB
+        technology: PostgreSQL 16 + pgvector
+    volumes:
+      - name: pgdata
+        type: named
+        purpose: PostgreSQL data persistence
+    networking:
+      type: docker-compose-default
+      external_access: localhost only
+      tls: false
+    secrets:
+      - name: GROQ_API_KEY
+        source: .env file (gitignored)
+      - name: POSTGRES_PASSWORD
+        source: docker-compose.yml (hardcoded dev value)
+    startup_command: docker compose up
+    shutdown_command: docker compose down
+    reset_command: docker compose down -v && docker compose up
+
+  ci:
+    name: GitHub Actions CI
+    purpose: Automated testing and build verification
+    type: ephemeral
+    host: GitHub-hosted runners (ubuntu-latest)
+    orchestration: GitHub Actions
+    services:
+      - name: postgres (service container)
+        image: pgvector/pgvector:pg16
+        port: 5432
+        purpose: Integration test database
+    triggers:
+      - push to main
+      - pull request to main
+    quality_gates:
+      - python-lint (ruff)
+      - python-typecheck (mypy)
+      - python-tests (pytest)
+      - architecture-enforcement (import-linter)
+      - frontend-lint (eslint + prettier)
+      - frontend-typecheck (tsc)
+      - frontend-tests (vitest)
+      - secrets-scan (gitleaks)
+      - docker-build-verification
+    target_duration: "< 5 minutes"
+
+# No staging or production environments for MVP.
+# Demo runs on local-dev environment.
+
+deployment_strategy: recreate
+branching_model: trunk-based
+ci_cd_platform: github-actions
+
+constraints:
+  budget: "EUR 0"
+  ram_total: 8GB
+  ram_docker: ~2.9GB (containers + Docker Desktop)
+  ram_os_browser: ~5.1GB
+  developer_count: 1
+  target_audience: "1-3 veterinarians (demo)"
