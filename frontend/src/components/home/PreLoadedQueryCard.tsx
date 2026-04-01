@@ -24,9 +24,12 @@ function getIcon(label?: string): string {
 }
 
 export default function PreLoadedQueryCard({ query, onClick }: Props) {
+  const queryText = query.query_text || query.text || "";
+  const topicLabel = query.topic_label || query.topic || "";
+
   return (
     <button
-      onClick={() => onClick(query.query_text)}
+      onClick={() => onClick(queryText)}
       className="card group text-left p-4 transition-all duration-200
         hover:shadow-md hover:border-primary/20 hover:-translate-y-0.5
         active:scale-[0.98] active:shadow-sm
@@ -34,14 +37,14 @@ export default function PreLoadedQueryCard({ query, onClick }: Props) {
     >
       <div className="flex items-start gap-3">
         <span className="text-xl mt-0.5 group-hover:scale-110 transition-transform duration-200">
-          {getIcon(query.topic_label)}
+          {getIcon(topicLabel)}
         </span>
         <div className="flex-1 min-w-0">
           <p className="text-xs font-semibold text-primary/60 uppercase tracking-wider mb-1">
-            {query.topic_label}
+            {topicLabel}
           </p>
-          <p className="text-sm text-[var(--color-text)] leading-snug line-clamp-2">
-            {query.query_text}
+          <p className="text-sm text-gray-900 leading-snug line-clamp-2">
+            {queryText}
           </p>
         </div>
         <svg

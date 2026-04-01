@@ -77,7 +77,10 @@ class PgPaperRepository:
                 )
 
                 if chunks:
+                    import numpy as np
+
                     for chunk in chunks:
+                        emb = np.array(chunk.embedding, dtype=np.float32) if not isinstance(chunk.embedding, np.ndarray) else chunk.embedding
                         await conn.execute(
                             """
                             INSERT INTO chunks (
@@ -90,7 +93,7 @@ class PgPaperRepository:
                             chunk.chunk_index,
                             chunk.chunk_text,
                             chunk.chunk_type,
-                            chunk.embedding,
+                            emb,
                             chunk.token_count,
                             chunk.created_at or datetime.now(timezone.utc),
                         )
@@ -98,17 +101,21 @@ class PgPaperRepository:
     async def find_similar(
         self, embedding: list[float], top_k: int = 10
     ) -> list[Chunk]:
+        import numpy as np
+
         pool = await self._get_pool()
+        vec = np.array(embedding, dtype=np.float32)
         async with pool.acquire() as conn:
             rows = await conn.fetch(
                 """
                 SELECT id, paper_id, chunk_index, chunk_text, chunk_type,
-                       embedding, token_count, created_at
+                       embedding, token_count, created_at,
+                       embedding <=> $1 as distance
                 FROM chunks
                 ORDER BY embedding <=> $1
                 LIMIT $2
                 """,
-                embedding,
+                vec,
                 top_k,
             )
             return [

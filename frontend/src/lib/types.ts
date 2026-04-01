@@ -43,8 +43,10 @@ export interface ComparisonRow {
 
 export interface PreLoadedQuery {
   id: string;
-  query_text: string;
-  topic_label: string;
+  text: string;
+  query_text?: string;
+  topic: string;
+  topic_label?: string;
 }
 
 export interface CorpusMetadata {
