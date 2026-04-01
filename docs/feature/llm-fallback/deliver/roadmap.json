@@ -1,0 +1,86 @@
+{
+  "feature_id": "llm-fallback",
+  "description": "LLM fallback with retry, user notification, and polling for primary model availability",
+  "phases": [
+    {
+      "phase_id": "01",
+      "name": "Backend Fallback",
+      "steps": [
+        {
+          "step_id": "01-01",
+          "name": "GroqProvider retry + fallback + availability check",
+          "description": "Add retry with exponential backoff (2 attempts, 1s/3s) to GroqProvider.generate(). On 503 after retries, fallback to GROQ_FALLBACK_MODEL_NAME. Return (text, used_fallback) tuple. Add check_availability() method for polling. Add GROQ_FALLBACK_MODEL_NAME and GROQ_MAX_RETRIES to Settings. Add GET /api/llm-status endpoint.",
+          "acceptance_criteria": [
+            "generate() retries 2 times on 503 before falling back",
+            "Fallback uses llama-3.1-8b-instant model",
+            "generate() returns a tuple (text, used_fallback_bool)",
+            "check_availability() tests primary model with minimal request",
+            "GET /api/llm-status returns primary_available and model name",
+            "Settings includes GROQ_FALLBACK_MODEL_NAME and GROQ_MAX_RETRIES"
+          ],
+          "test_file": null,
+          "scenario_name": null,
+          "files_to_modify": [
+            "backend/asia/adapters/groq_provider.py",
+            "backend/asia/config/settings.py",
+            "backend/asia/api/routes/metadata.py"
+          ],
+          "dependencies": [],
+          "estimated_hours": 3
+        },
+        {
+          "step_id": "01-02",
+          "name": "RAG pipeline + query endpoint propagate fallback flag",
+          "description": "Update SynthesisGenerator and RAGPipeline to handle the (text, used_fallback) return from LLMProvider. Propagate used_fallback, fallback_model, primary_model in the query response. Update query endpoint to include these fields.",
+          "acceptance_criteria": [
+            "RAG pipeline result includes used_fallback boolean",
+            "When fallback is used, response includes fallback_model and primary_model names",
+            "When primary model is used, used_fallback is false and no fallback fields present",
+            "Existing tests still pass"
+          ],
+          "test_file": null,
+          "scenario_name": null,
+          "files_to_modify": [
+            "backend/asia/services/synthesis_generator.py",
+            "backend/asia/services/rag_pipeline.py",
+            "backend/asia/api/routes/query.py"
+          ],
+          "dependencies": ["01-01"],
+          "estimated_hours": 2
+        }
+      ]
+    },
+    {
+      "phase_id": "02",
+      "name": "Frontend Notification",
+      "steps": [
+        {
+          "step_id": "02-01",
+          "name": "Fallback banner with polling and retry",
+          "description": "When query response has used_fallback=true, show a yellow banner explaining the fallback. Banner has two actions: 'Riprova con il modello principale' (polls GET /api/llm-status every 15s, auto-retries when available) and 'Continua con questa risposta' (dismisses banner). Add checkLlmStatus() to api.ts and fallback fields to types.ts.",
+          "acceptance_criteria": [
+            "Yellow banner appears when used_fallback is true",
+            "Banner shows fallback model name and explanation in Italian",
+            "Riprova button polls /api/llm-status every 15 seconds",
+            "When primary becomes available, query is automatically re-submitted",
+            "Continua button dismisses the banner",
+            "No banner when primary model is used"
+          ],
+          "test_file": null,
+          "scenario_name": null,
+          "files_to_modify": [
+            "frontend/src/app/query/page.tsx",
+            "frontend/src/lib/api.ts",
+            "frontend/src/lib/types.ts"
+          ],
+          "dependencies": ["01-02"],
+          "estimated_hours": 2
+        }
+      ]
+    }
+  ],
+  "validation": {
+    "status": "approved",
+    "total_steps": 3
+  }
+}

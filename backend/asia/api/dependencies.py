@@ -23,6 +23,8 @@ def create_rag_pipeline():
     llm = GroqProvider(
         api_key=settings.GROQ_API_KEY,
         model_name=settings.GROQ_MODEL_NAME,
+        fallback_model_name=settings.GROQ_FALLBACK_MODEL_NAME,
+        max_retries=settings.GROQ_MAX_RETRIES,
     )
     embedder = SentenceTransformerEmbedder(model_name=settings.EMBEDDING_MODEL_NAME)
 

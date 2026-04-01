@@ -1,9 +1,9 @@
-"""Metadata API routes for corpus info and pre-loaded queries.
+"""Metadata API routes for corpus info, pre-loaded queries, and LLM status.
 
-Driving ports: GET /api/corpus-metadata, GET /api/pre-loaded-queries
+Driving ports: GET /api/corpus-metadata, GET /api/pre-loaded-queries, GET /api/llm-status
 """
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 
 from asia.config.pre_loaded_queries import PRE_LOADED_QUERIES
 
@@ -29,3 +29,14 @@ async def get_corpus_metadata() -> dict:
 @router.get("/pre-loaded-queries")
 async def get_pre_loaded_queries() -> dict:
     return {"queries": PRE_LOADED_QUERIES}
+
+
+@router.get("/llm-status")
+async def get_llm_status(request: Request) -> dict:
+    """Check primary LLM model availability."""
+    llm = request.app.state.rag_pipeline._llm
+    available = await llm.check_availability()
+    return {
+        "primary_available": available,
+        "model": llm._model,
+    }
