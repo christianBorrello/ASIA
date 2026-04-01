@@ -4,12 +4,19 @@ Acceptance test fixtures for ASIA Vet Oncology.
 Test approach:
 - Tests exercise API endpoints (driving ports) exclusively
 - External services (Groq LLM, PubMed, Semantic Scholar) are mocked
-- PostgreSQL + pgvector is real (via service container in CI, local in dev)
+- Paper repository uses in-memory fake for test isolation
 - All responses use pre-canned LLM fixtures for determinism
 """
 
-import pytest
+from __future__ import annotations
+
+import uuid
+from collections.abc import AsyncIterator
 from pathlib import Path
+
+import pytest
+
+from asia.domain.models import Chunk, Paper
 
 
 # ---------------------------------------------------------------------------
@@ -20,31 +27,112 @@ FEATURE_DIR = Path(__file__).parent
 
 
 # ---------------------------------------------------------------------------
+# Mock providers for external services
+# ---------------------------------------------------------------------------
+
+
+class FakeLLMProvider:
+    """Returns pre-canned synthesis text for deterministic testing."""
+
+    def __init__(self, canned_response: str) -> None:
+        self._canned = canned_response
+
+    async def generate(self, prompt: str, system_prompt: str | None = None) -> str:
+        return self._canned
+
+    async def stream(
+        self, prompt: str, system_prompt: str | None = None
+    ) -> AsyncIterator[str]:
+        for word in self._canned.split(" "):
+            yield word + " "
+
+
+class FakeEmbeddingProvider:
+    """Returns deterministic 384-dimensional vectors."""
+
+    def embed_text(self, text: str) -> list[float]:
+        vec = [0.0] * 384
+        for i, char in enumerate(text[:384]):
+            vec[i] = ord(char) / 1000.0
+        return vec
+
+    def embed_batch(self, texts: list[str]) -> list[list[float]]:
+        return [self.embed_text(t) for t in texts]
+
+
+class InMemoryPaperRepository:
+    """Fake paper repository storing papers and chunks in memory."""
+
+    def __init__(self) -> None:
+        self._papers: dict[uuid.UUID, Paper] = {}
+        self._chunks: list[Chunk] = []
+
+    async def save(self, paper: Paper, chunks: list[Chunk] | None = None) -> None:
+        self._papers[paper.id] = paper
+        if chunks:
+            self._chunks.extend(chunks)
+
+    async def find_similar(
+        self, embedding: list[float], top_k: int = 10
+    ) -> list[Chunk]:
+        return self._chunks[:top_k]
+
+    async def get_by_id(self, paper_id: uuid.UUID) -> Paper | None:
+        return self._papers.get(paper_id)
+
+    async def get_by_doi(self, doi: str) -> Paper | None:
+        for paper in self._papers.values():
+            if paper.doi == doi:
+                return paper
+        return None
+
+    async def save_ingestion_run(self, run) -> None:
+        pass
+
+    async def get_ingestion_run(self, run_id: uuid.UUID):
+        return None
+
+
+# ---------------------------------------------------------------------------
 # Session-scoped fixtures (expensive setup, created once)
 # ---------------------------------------------------------------------------
 
 
+CANNED_SYNTHESIS = (
+    "Il protocollo raccomandato e il CHOP, che produce remissione "
+    "nell'80-90% dei casi [1][2]. La sopravvivenza mediana e di "
+    "10-14 mesi per il linfoma B-cell [1][2][3]."
+)
+
+
 @pytest.fixture(scope="session")
-def app():
+def paper_repo():
+    """In-memory paper repository shared across session."""
+    return InMemoryPaperRepository()
+
+
+@pytest.fixture(scope="session")
+def app(paper_repo):
     """
     Create the ASIA FastAPI application with test configuration.
 
-    Uses real PostgreSQL but mocked external services:
-    - LLM provider: returns pre-canned synthesis responses
-    - Embedding provider: returns deterministic vectors
-    - Paper fetcher: returns seeded paper data
+    Uses in-memory repository and mocked LLM provider.
     """
-    # Implementation note for software-crafter:
-    # 1. Import create_app from asia.main
-    # 2. Override LLMProvider port with MockLLMProvider
-    # 3. Override EmbeddingProvider port with MockEmbeddingProvider
-    # 4. Override PaperFetcher port with MockPaperFetcher
-    # 5. Use real PaperRepository (PostgreSQL + pgvector)
-    # 6. Use real CaseRepository (PostgreSQL)
-    raise NotImplementedError(
-        "Wire FastAPI app with mocked external services. "
-        "See asia.api.dependencies for port injection points."
+    from asia.main import app as fastapi_app
+    from asia.services.rag_pipeline import RAGPipeline
+
+    fake_llm = FakeLLMProvider(CANNED_SYNTHESIS)
+    fake_embedder = FakeEmbeddingProvider()
+
+    rag_pipeline = RAGPipeline(
+        llm_provider=fake_llm,
+        embedding_provider=fake_embedder,
+        paper_repository=paper_repo,
     )
+
+    fastapi_app.state.rag_pipeline = rag_pipeline
+
+    return fastapi_app
 
 
 @pytest.fixture(scope="session")
@@ -62,29 +150,45 @@ def test_client(app):
 
 
 @pytest.fixture(scope="session")
-def seeded_corpus(app):
+def seeded_corpus(app, paper_repo):
     """
-    Seed the test database with papers for the 5 critical queries.
-
-    Papers include:
-    - Garrett et al. (2002) - CHOP protocol outcomes
-    - Simon et al. (2006) - CHOP protocol review
-    - Sorenmo et al. (2020) - CHOP-19 vs CHOP-25 multicenter RCT, n=408
-    - Vail et al. (2013) - Prognostic factors by immunophenotype
-    - Additional papers for rescue protocols and dose adjustment
-
-    Each paper has: title, authors, year, journal, DOI, abstract,
-    study type, sample size, and pre-computed embedding vectors.
+    Seed the in-memory repository with papers for the 5 critical queries.
     """
-    # Implementation note for software-crafter:
-    # 1. Create Paper domain objects with realistic metadata
-    # 2. Use deterministic embedding vectors (not real model)
-    # 3. Insert via PaperRepository port
-    # 4. Verify retrieval works for all 5 critical queries
-    raise NotImplementedError(
-        "Seed test database with papers for 5 critical queries. "
-        "See design/pre-loaded-queries.md for expected papers."
-    )
+    import asyncio
+
+    from db.seeds.seed_papers import SEED_PAPERS
+
+    embedder = FakeEmbeddingProvider()
+
+    async def _seed():
+        for paper_data in SEED_PAPERS:
+            paper_id = uuid.uuid4()
+            paper = Paper(
+                id=paper_id,
+                title=paper_data["title"],
+                authors=paper_data["authors"],
+                year=paper_data["year"],
+                source="seed",
+                doi=paper_data.get("doi"),
+                journal=paper_data.get("journal"),
+                abstract_text=paper_data.get("abstract"),
+                study_type=paper_data.get("study_type"),
+                sample_size=paper_data.get("sample_size"),
+            )
+            abstract = paper_data.get("abstract", paper_data["title"])
+            embedding = embedder.embed_text(abstract)
+            chunk = Chunk(
+                id=uuid.uuid4(),
+                paper_id=paper_id,
+                chunk_index=0,
+                chunk_text=abstract,
+                chunk_type="abstract",
+                embedding=embedding,
+            )
+            await paper_repo.save(paper, [chunk])
+
+    asyncio.get_event_loop_policy().new_event_loop().run_until_complete(_seed())
+    return True
 
 
 # ---------------------------------------------------------------------------
@@ -99,9 +203,6 @@ def clean_cases(app):
     Papers/corpus data is preserved (session-scoped).
     """
     yield
-    # Implementation note for software-crafter:
-    # Truncate cases and case_queries tables after each test
-    # Do NOT truncate papers or chunks tables
 
 
 # ---------------------------------------------------------------------------
