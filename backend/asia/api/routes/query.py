@@ -35,7 +35,7 @@ async def submit_query(body: QueryRequest, request: Request):
     if body.stream:
         return _stream_response(result)
 
-    return {
+    response = {
         "query_text": body.text,
         "synthesis": result["synthesis"],
         "evidence_level": result["evidence_level"],
@@ -45,6 +45,11 @@ async def submit_query(body: QueryRequest, request: Request):
         "total_sample_size": result.get("total_sample_size"),
         "disclaimer": DISCLAIMER,
     }
+
+    if "comparison_table" in result:
+        response["comparison_table"] = result["comparison_table"]
+
+    return response
 
 
 def _stream_response(result: dict) -> StreamingResponse:

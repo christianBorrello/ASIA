@@ -3,8 +3,10 @@
 Tests enter through the RAGPipeline driving port and assert observable outcomes.
 LLM and repository are mocked at port boundaries.
 
-Test Budget: 2 behaviors (query produces synthesis, evidence scoring) x 2 = 4 max
-Actual: 2 tests (1 pipeline orchestration, 1 parametrized evidence scoring)
+Test Budget: 5 behaviors x 2 = 10 max
+  (query produces synthesis, evidence scoring, comparison query detection,
+   comparison query produces table, non-comparison query produces no table)
+Actual: 5 tests (2 original + 1 parametrized detection + 1 comparison table + 1 no table)
 """
 from __future__ import annotations
 
@@ -231,3 +233,126 @@ async def test_evidence_scoring_levels(study_types_and_sizes, expected_level):
 
     result = await pipeline.execute_query("Test query")
     assert result["evidence_level"] == expected_level
+
+
+# ---------------------------------------------------------------------------
+# Comparison query tests (Step 02-08)
+# Test Budget: 3 behaviors x 2 = 6 max | Actual: 3 tests
+# ---------------------------------------------------------------------------
+
+COMPARISON_SYNTHESIS_WITH_TABLE = (
+    "CHOP-19 e CHOP-25 hanno outcome equivalenti [1][2].\n\n"
+    '```json\n'
+    '{"comparison_table": {'
+    '"headers": ["Protocollo", "Tasso remissione", "Sopravvivenza mediana", "Citazione"], '
+    '"rows": ['
+    '{"protocol": "CHOP-19", "remission_rate": "80-90%", "median_survival": "12 mesi", "citation": "[1]"}, '
+    '{"protocol": "CHOP-25", "remission_rate": "80-90%", "median_survival": "12 mesi", "citation": "[2]"}'
+    ']}}\n'
+    '```'
+)
+
+
+class KeywordRoutingLLMStub:
+    """Stub LLM that returns comparison table JSON when query contains comparison keywords."""
+
+    def __init__(self, default_response: str, comparison_response: str) -> None:
+        self._default = default_response
+        self._comparison = comparison_response
+
+    async def generate(self, prompt: str, system_prompt: str | None = None) -> str:
+        if "tabella comparativa" in (system_prompt or "").lower() or "tabella comparativa" in prompt.lower():
+            return self._comparison
+        return self._default
+
+    async def stream(self, prompt: str, system_prompt: str | None = None):
+        response = await self.generate(prompt, system_prompt)
+        for word in response.split(" "):
+            yield word + " "
+
+
+@pytest.mark.parametrize(
+    "query_text,expected_is_comparison",
+    [
+        ("CHOP-19 vs CHOP-25: differenze negli outcome?", True),
+        ("Confronto tra CHOP e LOPP", True),
+        ("Differenze tra protocolli di rescue", True),
+        ("Rispetto a CHOP, come funziona LOPP?", True),
+        ("CHOP-19 versus CHOP-25", True),
+        ("Comparazione protocolli chemioterapici", True),
+        ("Meglio tra CHOP e COP?", True),
+        ("Qual e il protocollo di prima linea?", False),
+        ("Prognosi linfoma T-cell?", False),
+        ("Aggiustamento dose doxorubicina per neutropenia?", False),
+    ],
+    ids=[
+        "vs-keyword", "confronto", "differenze", "rispetto-a",
+        "versus", "comparazione", "meglio-tra",
+        "standard-first-line", "standard-prognosis", "standard-dose",
+    ],
+)
+def test_comparison_query_detection(query_text, expected_is_comparison):
+    """is_comparison_query classifies Italian comparison keywords correctly."""
+    from asia.domain.query_types import is_comparison_query
+
+    assert is_comparison_query(query_text) is expected_is_comparison
+
+
+@pytest.mark.anyio
+async def test_comparison_query_produces_comparison_table():
+    """RAGPipeline returns comparison_table with rows and citations for comparison queries."""
+    from asia.services.rag_pipeline import RAGPipeline
+
+    paper1 = _make_paper(title="CHOP-19 study", doi="10.1234/chop19")
+    paper2 = _make_paper(title="CHOP-25 study", doi="10.1234/chop25")
+    chunk1 = _make_chunk(paper1)
+    chunk2 = _make_chunk(paper2)
+
+    pipeline = RAGPipeline(
+        llm_provider=KeywordRoutingLLMStub(
+            default_response=SYNTHESIS_WITH_CITATIONS,
+            comparison_response=COMPARISON_SYNTHESIS_WITH_TABLE,
+        ),
+        embedding_provider=StubEmbeddingProvider(),
+        paper_repository=InMemoryPaperRepository(
+            papers=[paper1, paper2],
+            chunks=[chunk1, chunk2],
+        ),
+    )
+
+    result = await pipeline.execute_query("CHOP-19 vs CHOP-25: differenze negli outcome?")
+
+    assert "comparison_table" in result
+    table = result["comparison_table"]
+    assert "rows" in table
+    assert len(table["rows"]) >= 2
+    for row in table["rows"]:
+        assert "protocol" in row
+        assert "remission_rate" in row
+        assert "median_survival" in row
+        assert "citation" in row
+
+
+@pytest.mark.anyio
+async def test_non_comparison_query_has_no_comparison_table():
+    """RAGPipeline returns no comparison_table for standard queries."""
+    from asia.services.rag_pipeline import RAGPipeline
+
+    paper1 = _make_paper()
+    chunk1 = _make_chunk(paper1)
+
+    pipeline = RAGPipeline(
+        llm_provider=KeywordRoutingLLMStub(
+            default_response=SYNTHESIS_WITH_CITATIONS,
+            comparison_response=COMPARISON_SYNTHESIS_WITH_TABLE,
+        ),
+        embedding_provider=StubEmbeddingProvider(),
+        paper_repository=InMemoryPaperRepository(
+            papers=[paper1],
+            chunks=[chunk1],
+        ),
+    )
+
+    result = await pipeline.execute_query("Qual e il protocollo di prima linea?")
+
+    assert result.get("comparison_table") is None

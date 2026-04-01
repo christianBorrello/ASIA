@@ -13,8 +13,22 @@ SYSTEM_PROMPT = (
     "Cita solo i paper forniti nel contesto."
 )
 
+COMPARISON_PROMPT_SUFFIX = (
+    "\n\nQuesta e una domanda di confronto tra protocolli. "
+    "Includi una tabella comparativa in formato JSON alla fine della risposta, "
+    "racchiusa in un blocco ```json. La tabella deve avere questa struttura:\n"
+    '{"comparison_table": {"headers": ["Protocollo", "Tasso remissione", '
+    '"Sopravvivenza mediana", "Citazione"], "rows": [{"protocol": "...", '
+    '"remission_rate": "...", "median_survival": "...", "citation": "[N]"}]}}'
+)
 
-def build_user_prompt(query_text: str, chunks: list[Chunk], papers: dict) -> str:
+
+def build_user_prompt(
+    query_text: str,
+    chunks: list[Chunk],
+    papers: dict,
+    is_comparison: bool = False,
+) -> str:
     """Build user prompt with query, chunk texts, and paper metadata."""
     context_parts: list[str] = []
     for i, chunk in enumerate(chunks, start=1):
@@ -29,11 +43,16 @@ def build_user_prompt(query_text: str, chunks: list[Chunk], papers: dict) -> str
 
     context_block = "\n\n".join(context_parts)
 
-    return (
+    prompt = (
         f"Domanda clinica: {query_text}\n\n"
         f"Evidenze disponibili:\n\n{context_block}\n\n"
         "Sintetizza le evidenze in italiano con citazioni [N]."
     )
+
+    if is_comparison:
+        prompt += COMPARISON_PROMPT_SUFFIX
+
+    return prompt
 
 
 class SynthesisGenerator:
@@ -47,7 +66,16 @@ class SynthesisGenerator:
         query_text: str,
         chunks: list[Chunk],
         papers: dict,
+        is_comparison: bool = False,
     ) -> str:
         """Generate synthesis from query and retrieved chunks."""
-        user_prompt = build_user_prompt(query_text, chunks, papers)
-        return await self._llm.generate(user_prompt, system_prompt=SYSTEM_PROMPT)
+        system = SYSTEM_PROMPT
+        if is_comparison:
+            system += (
+                " Per domande di confronto, includi una tabella comparativa "
+                "in formato JSON."
+            )
+        user_prompt = build_user_prompt(
+            query_text, chunks, papers, is_comparison=is_comparison
+        )
+        return await self._llm.generate(user_prompt, system_prompt=system)

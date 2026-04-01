@@ -123,7 +123,16 @@ CANNED_Q2_SYNTHESIS = (
     "su 408 cani non ha trovato differenze significative tra i due "
     "protocolli [4][5]. La durata mediana della prima remissione era "
     "simile: 188 giorni per CHOP-19 contro 210 giorni per CHOP-25, "
-    "senza differenze statisticamente significative [4][5][6]."
+    "senza differenze statisticamente significative [4][5][6].\n\n"
+    '```json\n'
+    '{"comparison_table": {'
+    '"headers": ["Protocollo", "Tasso remissione", "Sopravvivenza mediana", "Citazione"], '
+    '"columns": ["protocol", "remission_rate", "median_survival", "citation_id"], '
+    '"rows": ['
+    '{"protocol": "CHOP-19", "remission_rate": "80-90%", "median_survival": "10-12 mesi", "citation": "[4]", "citation_id": 4}, '
+    '{"protocol": "CHOP-25", "remission_rate": "80-90%", "median_survival": "10-12 mesi", "citation": "[5]", "citation_id": 5}'
+    ']}}\n'
+    '```'
 )
 
 CANNED_Q3_SYNTHESIS = (

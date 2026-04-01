@@ -72,7 +72,7 @@ Feature: Milestone 1 -- Demo Ready
 
   # ===== US-04: Protocol Comparison Table =====
 
-  @US-04 @skip
+  @US-04
   Scenario: Comparison query generates a structured protocol table
     Given Dott.ssa Mancini submits "CHOP-19 vs CHOP-25: differenze negli outcome?"
     When the response is complete

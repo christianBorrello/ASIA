@@ -1,11 +1,13 @@
 """RAG pipeline service -- orchestrates embed, retrieve, synthesize, score."""
 from __future__ import annotations
 
+import json
 import re
 import uuid
 
 from asia.domain.evidence_scoring import compute_evidence_level
 from asia.domain.models import Chunk, Paper
+from asia.domain.query_types import is_comparison_query
 from asia.ports.embedding_provider import EmbeddingProvider
 from asia.ports.llm_provider import LLMProvider
 from asia.services.synthesis_generator import SynthesisGenerator
@@ -19,7 +21,8 @@ class RAGPipeline:
     3. Resolve chunk -> paper mappings
     4. Generate synthesis with citations via LLM
     5. Compute evidence level from cited papers
-    6. Return structured response
+    6. Extract comparison table if comparison query
+    7. Return structured response
     """
 
     def __init__(
@@ -42,7 +45,15 @@ class RAGPipeline:
 
         papers = await self._resolve_papers(chunks)
 
-        synthesis = await self._synthesis.generate(query_text, chunks, papers)
+        comparison = is_comparison_query(query_text)
+
+        synthesis = await self._synthesis.generate(
+            query_text, chunks, papers, is_comparison=comparison
+        )
+
+        comparison_table = None
+        if comparison:
+            comparison_table, synthesis = self._extract_comparison_table(synthesis)
 
         cited_papers = self._extract_cited_papers(synthesis, chunks, papers)
 
@@ -50,7 +61,7 @@ class RAGPipeline:
 
         sources = self._build_sources(synthesis, chunks, papers)
 
-        return {
+        result = {
             "synthesis": synthesis,
             "evidence_level": evidence_level.value,
             "evidence_score": evidence_score,
@@ -58,6 +69,30 @@ class RAGPipeline:
             "study_count": len(cited_papers),
             "total_sample_size": sum(p.sample_size or 0 for p in cited_papers),
         }
+
+        if comparison_table is not None:
+            result["comparison_table"] = comparison_table
+
+        return result
+
+    @staticmethod
+    def _extract_comparison_table(synthesis: str) -> tuple[dict | None, str]:
+        """Extract JSON comparison table from LLM response.
+
+        Returns (table_dict, cleaned_synthesis) where cleaned_synthesis
+        has the JSON block removed.
+        """
+        pattern = r"```json\s*(\{.*?\"comparison_table\".*?\})\s*```"
+        match = re.search(pattern, synthesis, re.DOTALL)
+        if match:
+            try:
+                parsed = json.loads(match.group(1))
+                table = parsed.get("comparison_table")
+                cleaned = synthesis[: match.start()].rstrip()
+                return table, cleaned
+            except (json.JSONDecodeError, KeyError):
+                pass
+        return None, synthesis
 
     async def _resolve_papers(
         self, chunks: list[Chunk]
