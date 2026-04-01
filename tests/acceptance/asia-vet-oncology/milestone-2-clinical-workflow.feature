@@ -48,7 +48,7 @@ Feature: Milestone 2 -- Clinical Workflow
     Then all patient details are intact
     And all previous queries and responses are available
 
-  @US-06 @skip
+  @US-06
   Scenario: Case creation fails when required fields are missing
     Given Dott.ssa Mancini navigates to case creation
     When she attempts to create a case without providing a diagnosis
