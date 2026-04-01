@@ -37,7 +37,7 @@ Feature: Milestone 1 -- Demo Ready
     And the response includes citations from relevant lymphoma studies
     And no citation refers to a non-existent paper
 
-  @US-03 @skip
+  @US-03
   Scenario: Protocol comparison query produces an accurate cited response
     Given the pre-loaded query "CHOP-19 vs CHOP-25: differenze negli outcome?" is submitted
     When the response is complete

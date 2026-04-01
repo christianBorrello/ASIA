@@ -43,6 +43,16 @@ SEED_PAPERS: list[dict] = [
     },
     # --- Topic 2: CHOP-19 vs CHOP-25 ---
     {
+        "title": "Multicenter randomized trial comparing CHOP-19 and CHOP-25 protocols for canine multicentric lymphoma",
+        "authors": [{"name": "Sorenmo KU"}, {"name": "Overley B"}, {"name": "Krick E"}],
+        "year": 2020,
+        "journal": "Journal of Veterinary Internal Medicine",
+        "doi": "10.1111/jvim.15921",
+        "abstract": "This multicenter randomized controlled trial compared CHOP-19 (19-week condensed protocol) with CHOP-25 (standard 25-week protocol) in 408 dogs with multicentric lymphoma. No statistically significant differences were found in overall response rate (CHOP-19: 84%, CHOP-25: 87%), median progression-free survival (CHOP-19: 195 days, CHOP-25: 215 days, P=0.21), or median overall survival (CHOP-19: 390 days, CHOP-25: 405 days, P=0.29). Both protocols showed equivalent outcome profiles with similar toxicity rates. CHOP-19 reduced treatment cost and client burden without compromising efficacy.",
+        "study_type": "randomized_controlled_trial",
+        "sample_size": 408,
+    },
+    {
         "title": "Comparison of 19-week and 25-week CHOP protocols for canine lymphoma",
         "authors": [{"name": "Curran KM"}, {"name": "Thamm DH"}],
         "year": 2016,

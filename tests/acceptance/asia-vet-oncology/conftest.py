@@ -32,18 +32,31 @@ FEATURE_DIR = Path(__file__).parent
 
 
 class FakeLLMProvider:
-    """Returns pre-canned synthesis text for deterministic testing."""
+    """Returns pre-canned synthesis text for deterministic testing.
 
-    def __init__(self, canned_response: str) -> None:
-        self._canned = canned_response
+    Routes responses based on query content keywords so each
+    pre-loaded query receives a clinically appropriate canned response.
+    """
+
+    def __init__(self, default_response: str, query_responses: dict[str, str] | None = None) -> None:
+        self._default = default_response
+        self._query_responses = query_responses or {}
+
+    def _select_response(self, prompt: str) -> str:
+        prompt_lower = prompt.lower()
+        for keyword, response in self._query_responses.items():
+            if keyword in prompt_lower:
+                return response
+        return self._default
 
     async def generate(self, prompt: str, system_prompt: str | None = None) -> str:
-        return self._canned
+        return self._select_response(prompt)
 
     async def stream(
         self, prompt: str, system_prompt: str | None = None
     ) -> AsyncIterator[str]:
-        for word in self._canned.split(" "):
+        response = self._select_response(prompt)
+        for word in response.split(" "):
             yield word + " "
 
 
@@ -104,6 +117,19 @@ CANNED_SYNTHESIS = (
     "10-14 mesi per il linfoma B-cell [1][2][3]."
 )
 
+CANNED_Q2_SYNTHESIS = (
+    "CHOP-19 e CHOP-25 hanno outcome equivalenti in termini di "
+    "remissione e sopravvivenza [4]. Lo studio multicentrico di Sorenmo "
+    "su 408 cani non ha trovato differenze significative tra i due "
+    "protocolli [4][5]. La durata mediana della prima remissione era "
+    "simile: 188 giorni per CHOP-19 contro 210 giorni per CHOP-25, "
+    "senza differenze statisticamente significative [4][5][6]."
+)
+
+QUERY_RESPONSES = {
+    "chop-19 vs chop-25": CANNED_Q2_SYNTHESIS,
+}
+
 
 @pytest.fixture(scope="session")
 def paper_repo():
@@ -121,7 +147,7 @@ def app(paper_repo):
     from asia.main import app as fastapi_app
     from asia.services.rag_pipeline import RAGPipeline
 
-    fake_llm = FakeLLMProvider(CANNED_SYNTHESIS)
+    fake_llm = FakeLLMProvider(CANNED_SYNTHESIS, QUERY_RESPONSES)
     fake_embedder = FakeEmbeddingProvider()
 
     rag_pipeline = RAGPipeline(
