@@ -36,7 +36,7 @@ Feature: Walking Skeleton -- One Question, One Answer
 
   # --- Walking Skeleton 3: Homepage Discovery ---
 
-  @walking_skeleton @US-01 @skip
+  @walking_skeleton @US-01
   Scenario: Veterinarian discovers ASIA and understands its purpose
     Given Dott.ssa Mancini opens the ASIA homepage for the first time
     When the page finishes loading
