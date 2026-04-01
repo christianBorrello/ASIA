@@ -1,0 +1,880 @@
+{
+  "feature_id": "asia-vet-oncology",
+  "description": "ASIA MVP - Canine lymphoma clinical decision support. RAG-powered Italian-language synthesis with sentence-level citations for veterinary oncologists.",
+  "phases": [
+    {
+      "phase_id": "01",
+      "name": "Walking Skeleton",
+      "estimated_days": 3,
+      "goal": "Prove the core value proposition: a vet types a question, gets an Italian synthesis with verifiable citations.",
+      "steps": [
+        {
+          "step_id": "01-01",
+          "name": "Project Infrastructure Setup",
+          "description": "Docker Compose with FastAPI skeleton (port 8000), Next.js skeleton (port 3000), PostgreSQL 16 + pgvector (port 5432). Database schema migration for papers, chunks, cases, case_queries, ingestion_runs tables. Pre-commit hooks with import-linter and eslint-plugin-boundaries. Pydantic Settings configuration.",
+          "acceptance_criteria": [
+            "docker compose up starts all 3 services without errors",
+            "FastAPI health endpoint returns 200 at /api/health",
+            "Next.js renders a placeholder homepage at localhost:3000",
+            "PostgreSQL has all tables created with pgvector extension enabled",
+            "import-linter contracts configured for domain/ports/services/adapters boundaries"
+          ],
+          "test_file": null,
+          "scenario_name": null,
+          "files_to_modify": [
+            "docker-compose.yml",
+            "backend/Dockerfile",
+            "backend/pyproject.toml",
+            "backend/asia/__init__.py",
+            "backend/asia/main.py",
+            "backend/asia/config/settings.py",
+            "backend/asia/config/pre_loaded_queries.py",
+            "backend/asia/domain/__init__.py",
+            "backend/asia/domain/models.py",
+            "backend/asia/ports/__init__.py",
+            "backend/asia/ports/llm_provider.py",
+            "backend/asia/ports/embedding_provider.py",
+            "backend/asia/ports/paper_repository.py",
+            "backend/asia/ports/case_repository.py",
+            "backend/asia/ports/query_log_repository.py",
+            "backend/asia/ports/paper_fetcher.py",
+            "backend/asia/services/__init__.py",
+            "backend/asia/adapters/__init__.py",
+            "backend/asia/api/__init__.py",
+            "backend/asia/api/dependencies.py",
+            "backend/asia/api/routes/__init__.py",
+            "backend/asia/api/routes/query.py",
+            "backend/asia/api/routes/metadata.py",
+            "backend/asia/api/middleware/error_handler.py",
+            "backend/db/migrations/001_initial_schema.sql",
+            "frontend/Dockerfile",
+            "frontend/package.json",
+            "frontend/src/app/page.tsx",
+            "frontend/src/app/layout.tsx",
+            "frontend/src/lib/api.ts",
+            "frontend/src/lib/types.ts",
+            ".importlinter"
+          ],
+          "dependencies": [],
+          "estimated_hours": 6,
+          "deliverables": [
+            "Running Docker Compose stack with all 3 services",
+            "PostgreSQL schema with pgvector extension and all tables",
+            "FastAPI skeleton with health endpoint and port interfaces",
+            "Next.js skeleton with placeholder homepage",
+            "Architecture enforcement configuration"
+          ]
+        },
+        {
+          "step_id": "01-02",
+          "name": "Ingestion Pipeline Seed",
+          "description": "Populate PostgreSQL with papers and chunk embeddings for the 5 critical queries (first-line CHOP, CHOP-19 vs CHOP-25, rescue protocols, T-cell vs B-cell prognosis, doxorubicin dose adjustment). Implement EmbeddingProvider adapter (sentence-transformers MiniLM), PaperRepository adapter (pgvector), and ingestion service. Seed corpus with sufficient papers to answer all 5 pre-loaded queries.",
+          "acceptance_criteria": [
+            "Corpus contains papers relevant to all 5 critical queries",
+            "Chunks table has embeddings (384 dimensions) for all ingested papers",
+            "IVFFlat index is built on chunks.embedding",
+            "Vector similarity search returns relevant chunks for each of the 5 query topics",
+            "Ingestion run is logged in ingestion_runs table"
+          ],
+          "test_file": null,
+          "scenario_name": null,
+          "files_to_modify": [
+            "backend/asia/adapters/sentence_transformer_embedder.py",
+            "backend/asia/adapters/pg_paper_repository.py",
+            "backend/asia/services/ingestion_service.py",
+            "backend/asia/adapters/pubmed_fetcher.py",
+            "backend/asia/adapters/semantic_scholar_fetcher.py",
+            "backend/db/seeds/seed_papers.py",
+            "backend/tests/integration/test_paper_repository.py"
+          ],
+          "dependencies": ["01-01"],
+          "estimated_hours": 6,
+          "deliverables": [
+            "Seeded corpus with canine lymphoma papers",
+            "Working EmbeddingProvider adapter",
+            "Working PaperRepository adapter with pgvector search",
+            "Ingestion service and seed script"
+          ]
+        },
+        {
+          "step_id": "01-03",
+          "name": "Core Query Flow - Cited Synthesis",
+          "description": "Implement the full RAG pipeline: query embedding, pgvector retrieval, LLM synthesis with citation markers, evidence level scoring, and SSE streaming response. Implement LLMProvider adapter (Groq/Llama 3.3 70B), SynthesisGenerator service, and RAG pipeline orchestration. Wire the POST /api/query endpoint to stream results via SSE. Frontend renders synthesis with citation markers and evidence level badge.",
+          "acceptance_criteria": [
+            "Veterinarian submits a clinical question and receives a synthesis in Italian",
+            "Synthesis contains at least 1 inline citation marker",
+            "Evidence level indicator (ALTO/MODERATO/BASSO) is displayed",
+            "Medical disclaimer is visible"
+          ],
+          "test_file": "tests/acceptance/asia-vet-oncology/walking-skeleton.feature",
+          "scenario_name": "Veterinarian asks a clinical question and receives a cited synthesis in Italian",
+          "files_to_modify": [
+            "backend/asia/adapters/groq_provider.py",
+            "backend/asia/services/rag_pipeline.py",
+            "backend/asia/services/synthesis_generator.py",
+            "backend/asia/domain/evidence_scoring.py",
+            "backend/asia/api/routes/query.py",
+            "frontend/src/app/query/[id]/page.tsx",
+            "frontend/src/components/query/SynthesisStream.tsx",
+            "frontend/src/components/query/EvidenceLevel.tsx",
+            "frontend/src/components/shared/Disclaimer.tsx",
+            "frontend/src/components/shared/SearchBox.tsx",
+            "frontend/src/hooks/useSSEStream.ts",
+            "frontend/src/hooks/useQuery.ts",
+            "frontend/src/lib/constants.ts"
+          ],
+          "dependencies": ["01-01", "01-02"],
+          "estimated_hours": 8,
+          "deliverables": [
+            "Working RAG pipeline (embed -> retrieve -> synthesize)",
+            "Groq LLM adapter with streaming",
+            "Evidence level scoring (pure function)",
+            "SSE streaming endpoint",
+            "Frontend synthesis rendering with citations and evidence badge"
+          ]
+        },
+        {
+          "step_id": "01-04",
+          "name": "Citation Verification - Source Panel",
+          "description": "Implement the source panel that displays author, year, and DOI link for each citation. Ensure citation markers in synthesis map 1:1 to source panel entries. SSE sends source metadata before synthesis tokens.",
+          "acceptance_criteria": [
+            "Each citation in the synthesis has a corresponding source panel entry",
+            "Source panel shows author, year, and a link to the paper for each citation",
+            "Number of source panel entries matches number of citation markers in synthesis"
+          ],
+          "test_file": "tests/acceptance/asia-vet-oncology/walking-skeleton.feature",
+          "scenario_name": "Veterinarian verifies a citation from the synthesis",
+          "files_to_modify": [
+            "frontend/src/components/query/SourcePanel.tsx",
+            "backend/asia/api/routes/query.py",
+            "frontend/src/app/query/[id]/page.tsx"
+          ],
+          "dependencies": ["01-03"],
+          "estimated_hours": 3,
+          "deliverables": [
+            "Source panel component with author, year, DOI link",
+            "Citation-to-source mapping validated",
+            "SSE sources event sent before synthesis tokens"
+          ]
+        },
+        {
+          "step_id": "01-05",
+          "name": "Homepage Discovery",
+          "description": "Implement corpus metadata endpoint (GET /api/corpus-metadata) returning corpus date and paper count. Implement pre-loaded queries endpoint (GET /api/pre-loaded-queries) returning 5 queries. Homepage displays search box, pre-loaded query placeholders, case mode CTA, explain paper CTA, disclaimer, and corpus date.",
+          "acceptance_criteria": [
+            "Homepage shows a search box for clinical questions",
+            "Homepage shows a 'Crea nuovo caso' button for case management",
+            "Homepage shows an 'Explain a Paper' option",
+            "Medical disclaimer is visible",
+            "Corpus date is displayed"
+          ],
+          "test_file": "tests/acceptance/asia-vet-oncology/walking-skeleton.feature",
+          "scenario_name": "Veterinarian discovers ASIA and understands its purpose",
+          "files_to_modify": [
+            "backend/asia/api/routes/metadata.py",
+            "frontend/src/app/page.tsx",
+            "frontend/src/components/shared/CorpusDate.tsx",
+            "frontend/src/components/shared/SearchBox.tsx",
+            "frontend/src/components/shared/Disclaimer.tsx"
+          ],
+          "dependencies": ["01-01", "01-02"],
+          "estimated_hours": 3,
+          "deliverables": [
+            "Corpus metadata API endpoint",
+            "Pre-loaded queries API endpoint",
+            "Homepage with search, CTAs, disclaimer, and corpus date"
+          ]
+        }
+      ]
+    },
+    {
+      "phase_id": "02",
+      "name": "Demo Ready",
+      "estimated_days": 4,
+      "goal": "Pre-loaded queries with verified accurate responses, protocol comparison table, and graceful error handling for a stakeholder demo.",
+      "steps": [
+        {
+          "step_id": "02-01",
+          "name": "Pre-loaded Query Cards Display",
+          "description": "Homepage displays the 5 pre-loaded clinical queries as clickable cards. Cards sourced from config/pre_loaded_queries.py. Each card shows the query text and a brief topic label.",
+          "acceptance_criteria": [
+            "Homepage displays 5 pre-loaded clinical queries as clickable cards",
+            "Queries cover first-line protocol, protocol comparison, rescue protocols, prognosis, and dose adjustment"
+          ],
+          "test_file": "tests/acceptance/asia-vet-oncology/milestone-1-demo-ready.feature",
+          "scenario_name": "Homepage displays five pre-loaded clinical queries as clickable cards",
+          "files_to_modify": [
+            "frontend/src/components/home/PreLoadedQueryCard.tsx",
+            "frontend/src/app/page.tsx"
+          ],
+          "dependencies": ["01-05"],
+          "estimated_hours": 2,
+          "deliverables": [
+            "PreLoadedQueryCard component",
+            "Homepage renders 5 clickable query cards"
+          ]
+        },
+        {
+          "step_id": "02-02",
+          "name": "Pre-loaded Query Submission",
+          "description": "Clicking a pre-loaded query card submits it to the evidence pipeline. Query text is displayed at the top of the response page. Streaming begins immediately.",
+          "acceptance_criteria": [
+            "Clicking a query card submits it for evidence synthesis",
+            "A streaming response begins",
+            "The query text is displayed at the top of the response"
+          ],
+          "test_file": "tests/acceptance/asia-vet-oncology/milestone-1-demo-ready.feature",
+          "scenario_name": "Clicking a pre-loaded query submits it to the evidence pipeline",
+          "files_to_modify": [
+            "frontend/src/components/home/PreLoadedQueryCard.tsx",
+            "frontend/src/app/query/[id]/page.tsx"
+          ],
+          "dependencies": ["02-01", "01-03"],
+          "estimated_hours": 2,
+          "deliverables": [
+            "Click-to-submit flow for pre-loaded queries",
+            "Query text displayed in response header"
+          ]
+        },
+        {
+          "step_id": "02-03",
+          "name": "Q1 Accuracy - First-line Protocol",
+          "description": "Validate and tune the RAG pipeline to produce an accurate cited response for Q1: first-line CHOP protocol for B-cell stage III lymphoma. Verify synthesis mentions CHOP, remission rates, and cites relevant studies. Calibrate retrieval thresholds and synthesis prompts.",
+          "acceptance_criteria": [
+            "Synthesis mentions the CHOP protocol",
+            "Synthesis mentions remission rates",
+            "Response includes citations from relevant lymphoma studies",
+            "No citation refers to a non-existent paper"
+          ],
+          "test_file": "tests/acceptance/asia-vet-oncology/milestone-1-demo-ready.feature",
+          "scenario_name": "First-line protocol query produces an accurate cited response",
+          "files_to_modify": [
+            "backend/asia/services/synthesis_generator.py",
+            "backend/asia/services/rag_pipeline.py",
+            "backend/asia/config/settings.py",
+            "backend/tests/critical_queries/test_q1_first_line.py"
+          ],
+          "dependencies": ["02-02"],
+          "estimated_hours": 3,
+          "deliverables": [
+            "Tuned RAG pipeline for Q1 accuracy",
+            "Q1 critical query test"
+          ]
+        },
+        {
+          "step_id": "02-04",
+          "name": "Q2 Accuracy - Protocol Comparison",
+          "description": "Validate RAG pipeline produces accurate cited response for Q2: CHOP-19 vs CHOP-25 outcome differences. Verify synthesis discusses outcome equivalence and cites the Sorenmo multicenter study.",
+          "acceptance_criteria": [
+            "Synthesis discusses outcome equivalence between CHOP-19 and CHOP-25",
+            "Response cites the Sorenmo multicenter study",
+            "No citation refers to a non-existent paper"
+          ],
+          "test_file": "tests/acceptance/asia-vet-oncology/milestone-1-demo-ready.feature",
+          "scenario_name": "Protocol comparison query produces an accurate cited response",
+          "files_to_modify": [
+            "backend/asia/services/synthesis_generator.py",
+            "backend/tests/critical_queries/test_q2_comparison.py"
+          ],
+          "dependencies": ["02-03"],
+          "estimated_hours": 2,
+          "deliverables": [
+            "Tuned RAG pipeline for Q2 accuracy",
+            "Q2 critical query test"
+          ]
+        },
+        {
+          "step_id": "02-05",
+          "name": "Q3 Accuracy - Rescue Protocols",
+          "description": "Validate RAG pipeline produces accurate cited response for Q3: rescue protocols for early relapse after CHOP. Verify synthesis mentions at least 2 rescue protocol options with citations.",
+          "acceptance_criteria": [
+            "Synthesis mentions at least 2 rescue protocol options",
+            "Each recommendation has at least 1 citation",
+            "No citation refers to a non-existent paper"
+          ],
+          "test_file": "tests/acceptance/asia-vet-oncology/milestone-1-demo-ready.feature",
+          "scenario_name": "Rescue protocol query produces an accurate cited response",
+          "files_to_modify": [
+            "backend/tests/critical_queries/test_q3_rescue.py"
+          ],
+          "dependencies": ["02-04"],
+          "estimated_hours": 2,
+          "deliverables": [
+            "Tuned RAG pipeline for Q3 accuracy",
+            "Q3 critical query test"
+          ]
+        },
+        {
+          "step_id": "02-06",
+          "name": "Q4 Accuracy - Prognosis by Immunophenotype",
+          "description": "Validate RAG pipeline produces accurate cited response for Q4: T-cell vs B-cell prognosis. Verify synthesis discusses prognostic differences and mentions B-cell better prognosis.",
+          "acceptance_criteria": [
+            "Synthesis discusses the prognostic difference between immunophenotypes",
+            "Synthesis mentions that B-cell has a better prognosis",
+            "Each claim has at least 1 citation",
+            "No citation refers to a non-existent paper"
+          ],
+          "test_file": "tests/acceptance/asia-vet-oncology/milestone-1-demo-ready.feature",
+          "scenario_name": "Prognosis query produces an accurate cited response",
+          "files_to_modify": [
+            "backend/tests/critical_queries/test_q4_prognosis.py"
+          ],
+          "dependencies": ["02-05"],
+          "estimated_hours": 2,
+          "deliverables": [
+            "Tuned RAG pipeline for Q4 accuracy",
+            "Q4 critical query test"
+          ]
+        },
+        {
+          "step_id": "02-07",
+          "name": "Q5 Accuracy - Dose Adjustment",
+          "description": "Validate RAG pipeline produces accurate cited response for Q5: doxorubicin dose adjustment for neutropenia. Verify synthesis provides grade-specific guidance with citations.",
+          "acceptance_criteria": [
+            "Synthesis provides grade-specific dose adjustment guidance",
+            "Each recommendation has at least 1 citation",
+            "No citation refers to a non-existent paper"
+          ],
+          "test_file": "tests/acceptance/asia-vet-oncology/milestone-1-demo-ready.feature",
+          "scenario_name": "Dose adjustment query produces an accurate cited response",
+          "files_to_modify": [
+            "backend/tests/critical_queries/test_q5_dose.py"
+          ],
+          "dependencies": ["02-06"],
+          "estimated_hours": 2,
+          "deliverables": [
+            "Tuned RAG pipeline for Q5 accuracy",
+            "Q5 critical query test"
+          ]
+        },
+        {
+          "step_id": "02-08",
+          "name": "Comparison Table Generation",
+          "description": "Implement query type classification (comparison vs standard) and structured protocol comparison table generation. When a comparison query is detected, the synthesis includes a structured table with protocol name, remission rate, median survival, and citation references.",
+          "acceptance_criteria": [
+            "Comparison query generates a response with a comparison table",
+            "Table has columns for protocol name, remission rate, and median survival",
+            "Each row in the table has a citation reference"
+          ],
+          "test_file": "tests/acceptance/asia-vet-oncology/milestone-1-demo-ready.feature",
+          "scenario_name": "Comparison query generates a structured protocol table",
+          "files_to_modify": [
+            "backend/asia/domain/query_types.py",
+            "backend/asia/services/rag_pipeline.py",
+            "backend/asia/services/synthesis_generator.py",
+            "frontend/src/components/query/ComparisonTable.tsx",
+            "frontend/src/app/query/[id]/page.tsx"
+          ],
+          "dependencies": ["02-04"],
+          "estimated_hours": 4,
+          "deliverables": [
+            "Query type classification (comparison vs standard)",
+            "Comparison table generation in synthesis",
+            "ComparisonTable frontend component"
+          ]
+        },
+        {
+          "step_id": "02-09",
+          "name": "Non-comparison Query Table Absence",
+          "description": "Verify that non-comparison queries (e.g., prognosis) produce a synthesis without a comparison table. Query type classification correctly identifies standard queries.",
+          "acceptance_criteria": [
+            "Non-comparison query response is a synthesis with citations",
+            "No comparison table is displayed for non-comparison queries"
+          ],
+          "test_file": "tests/acceptance/asia-vet-oncology/milestone-1-demo-ready.feature",
+          "scenario_name": "Non-comparison query does not generate a table",
+          "files_to_modify": [
+            "backend/asia/domain/query_types.py",
+            "frontend/src/app/query/[id]/page.tsx"
+          ],
+          "dependencies": ["02-08"],
+          "estimated_hours": 1,
+          "deliverables": [
+            "Query type classification handles non-comparison correctly",
+            "Frontend conditionally renders table"
+          ]
+        },
+        {
+          "step_id": "02-10",
+          "name": "Out-of-scope Query - No Evidence Message",
+          "description": "Implement confidence threshold check after retrieval. When max cosine similarity < 0.35 or average top-5 < 0.25, return an honest no-evidence message in Italian with scope explanation and suggestions (rephrase, try pre-loaded, PubMed link).",
+          "acceptance_criteria": [
+            "Out-of-scope query returns a message indicating insufficient evidence",
+            "Message explains the corpus covers canine multicentric lymphoma",
+            "Suggestions are provided to rephrase or try pre-loaded queries"
+          ],
+          "test_file": "tests/acceptance/asia-vet-oncology/milestone-1-demo-ready.feature",
+          "scenario_name": "Out-of-scope query returns an honest no-evidence message",
+          "files_to_modify": [
+            "backend/asia/services/rag_pipeline.py",
+            "backend/asia/api/routes/query.py",
+            "frontend/src/components/query/ErrorMessage.tsx",
+            "frontend/src/app/query/[id]/page.tsx"
+          ],
+          "dependencies": ["01-03"],
+          "estimated_hours": 3,
+          "deliverables": [
+            "Confidence threshold check in RAG pipeline",
+            "No-evidence response with Italian message and suggestions",
+            "ErrorMessage frontend component"
+          ]
+        },
+        {
+          "step_id": "02-11",
+          "name": "No Fabrication on Missing Evidence",
+          "description": "Verify that when evidence is genuinely missing (e.g., feline pulmonary carcinoma), ASIA returns no clinical synthesis and no citations. The system honestly states insufficient evidence was found.",
+          "acceptance_criteria": [
+            "Response contains no clinical synthesis for off-topic query",
+            "No citations are included",
+            "Response honestly states that insufficient evidence was found"
+          ],
+          "test_file": "tests/acceptance/asia-vet-oncology/milestone-1-demo-ready.feature",
+          "scenario_name": "ASIA never fabricates an answer when evidence is missing",
+          "files_to_modify": [
+            "backend/asia/services/rag_pipeline.py"
+          ],
+          "dependencies": ["02-10"],
+          "estimated_hours": 1,
+          "deliverables": [
+            "No-fabrication behavior verified for off-topic queries"
+          ]
+        },
+        {
+          "step_id": "02-12",
+          "name": "Slow Response Progress Feedback",
+          "description": "Implement SSE heartbeat events during long-running queries. After 5 seconds, show progress indicator with paper count being analyzed. After 10 seconds, show estimated completion time. Heartbeats sent every 3 seconds.",
+          "acceptance_criteria": [
+            "Progress indicator appears when response takes more than 10 seconds",
+            "Indicator shows number of papers being analyzed",
+            "Estimated completion time is displayed"
+          ],
+          "test_file": "tests/acceptance/asia-vet-oncology/milestone-1-demo-ready.feature",
+          "scenario_name": "Slow response shows progress feedback",
+          "files_to_modify": [
+            "backend/asia/api/routes/query.py",
+            "frontend/src/components/query/ProgressIndicator.tsx",
+            "frontend/src/hooks/useSSEStream.ts"
+          ],
+          "dependencies": ["01-03"],
+          "estimated_hours": 3,
+          "deliverables": [
+            "SSE heartbeat events with progress data",
+            "ProgressIndicator frontend component",
+            "SSE hook handles heartbeat events"
+          ]
+        },
+        {
+          "step_id": "02-13",
+          "name": "Self-reflective Citation Verification",
+          "description": "Implement the self-reflective verification pass. After initial synthesis, verify each citation-claim pair via LLM. Remove unsupported citations (NON_SUPPORTA), soften partial claims (PARZIALE). Display transparency note when citations are removed.",
+          "acceptance_criteria": [
+            "When verification detects an unsupported citation, it is removed from the final response",
+            "A transparency note explains that a citation was removed for quality assurance",
+            "Final response contains only verified citations"
+          ],
+          "test_file": "tests/acceptance/asia-vet-oncology/milestone-1-demo-ready.feature",
+          "scenario_name": "Self-reflective verification removes an unsupported citation",
+          "files_to_modify": [
+            "backend/asia/services/citation_verifier.py",
+            "backend/asia/services/rag_pipeline.py",
+            "frontend/src/components/query/TransparencyNote.tsx",
+            "frontend/src/app/query/[id]/page.tsx"
+          ],
+          "dependencies": ["01-03"],
+          "estimated_hours": 5,
+          "deliverables": [
+            "Citation verifier service with SUPPORTA/PARZIALE/NON_SUPPORTA classification",
+            "Synthesis regeneration after citation removal",
+            "TransparencyNote frontend component"
+          ]
+        },
+        {
+          "step_id": "02-14",
+          "name": "Italian Error Messages with Next Steps",
+          "description": "Implement error handler middleware that ensures all error messages are in Italian, suggest concrete next steps, and never expose technical error codes or raw system messages.",
+          "acceptance_criteria": [
+            "Error messages are in Italian",
+            "Messages suggest concrete next steps",
+            "No technical error codes or raw system messages are shown"
+          ],
+          "test_file": "tests/acceptance/asia-vet-oncology/milestone-1-demo-ready.feature",
+          "scenario_name": "Error messages are in Italian and suggest next steps",
+          "files_to_modify": [
+            "backend/asia/api/middleware/error_handler.py",
+            "frontend/src/components/query/ErrorMessage.tsx"
+          ],
+          "dependencies": ["02-10"],
+          "estimated_hours": 2,
+          "deliverables": [
+            "Italian error handler middleware",
+            "Error message format with suggestions"
+          ]
+        },
+        {
+          "step_id": "02-15",
+          "name": "Streaming Connection Loss Recovery",
+          "description": "Implement frontend behavior that preserves partial content when SSE connection is lost mid-stream. Display a banner explaining the interruption and offer a retry button. Partial response with citations keeps source panel entries.",
+          "acceptance_criteria": [
+            "Partial response already received is preserved on screen when connection is lost",
+            "A message explains the connection was interrupted",
+            "A retry option is available"
+          ],
+          "test_file": "tests/acceptance/asia-vet-oncology/milestone-1-demo-ready.feature",
+          "scenario_name": "Streaming connection lost preserves partial content",
+          "files_to_modify": [
+            "frontend/src/hooks/useSSEStream.ts",
+            "frontend/src/components/query/ErrorMessage.tsx",
+            "frontend/src/app/query/[id]/page.tsx"
+          ],
+          "dependencies": ["01-03"],
+          "estimated_hours": 3,
+          "deliverables": [
+            "SSE hook handles connection loss gracefully",
+            "Partial content preservation",
+            "Retry button for failed connections"
+          ]
+        },
+        {
+          "step_id": "02-16",
+          "name": "Property: No Fabricated Citations",
+          "description": "Implement property-shaped validation that every cited paper exists in the corpus or in PubMed, and every citation marker corresponds to a source panel entry. This validates the citation integrity invariant across any query.",
+          "acceptance_criteria": [
+            "Every cited paper exists in the corpus or in PubMed",
+            "Every citation marker in the synthesis corresponds to a source panel entry"
+          ],
+          "test_file": "tests/acceptance/asia-vet-oncology/milestone-1-demo-ready.feature",
+          "scenario_name": "No response ever contains fabricated citations",
+          "files_to_modify": [
+            "backend/asia/services/citation_verifier.py",
+            "backend/asia/services/rag_pipeline.py"
+          ],
+          "dependencies": ["02-13"],
+          "estimated_hours": 2,
+          "deliverables": [
+            "Citation integrity invariant enforced",
+            "Property test validates no fabricated citations"
+          ]
+        },
+        {
+          "step_id": "02-17",
+          "name": "Property: Medical Disclaimer on Every Page",
+          "description": "Implement and validate that the medical disclaimer is visible and cannot be dismissed on every page of the ASIA application. Disclaimer rendered in root layout.",
+          "acceptance_criteria": [
+            "Medical disclaimer is visible on every page",
+            "Disclaimer cannot be hidden or dismissed"
+          ],
+          "test_file": "tests/acceptance/asia-vet-oncology/milestone-1-demo-ready.feature",
+          "scenario_name": "Medical disclaimer is visible on every page",
+          "files_to_modify": [
+            "frontend/src/components/shared/Disclaimer.tsx",
+            "frontend/src/app/layout.tsx"
+          ],
+          "dependencies": ["01-05"],
+          "estimated_hours": 1,
+          "deliverables": [
+            "Persistent disclaimer in root layout",
+            "Disclaimer cannot be dismissed"
+          ]
+        }
+      ]
+    },
+    {
+      "phase_id": "03",
+      "name": "Clinical Workflow",
+      "estimated_days": 3,
+      "goal": "Persistent case management with patient context injection and paper explanation feature.",
+      "steps": [
+        {
+          "step_id": "03-01",
+          "name": "Full Case Creation",
+          "description": "Implement case creation with all fields: patient name, breed, age, diagnosis, stage, immunophenotype, and clinical notes. POST /api/cases endpoint with validation. Case form frontend with all fields. Case page displays entered details.",
+          "acceptance_criteria": [
+            "Case is created successfully with all patient information fields",
+            "Case page displays all the entered patient details"
+          ],
+          "test_file": "tests/acceptance/asia-vet-oncology/milestone-2-clinical-workflow.feature",
+          "scenario_name": "Veterinarian creates a new case with full patient information",
+          "files_to_modify": [
+            "backend/asia/adapters/pg_case_repository.py",
+            "backend/asia/services/case_service.py",
+            "backend/asia/api/routes/cases.py",
+            "frontend/src/app/cases/new/page.tsx",
+            "frontend/src/app/cases/[id]/page.tsx",
+            "frontend/src/components/cases/CaseForm.tsx",
+            "frontend/src/components/cases/CaseHeader.tsx"
+          ],
+          "dependencies": ["01-01"],
+          "estimated_hours": 4,
+          "deliverables": [
+            "Case CRUD API endpoint",
+            "CaseRepository adapter (PostgreSQL)",
+            "Case creation form",
+            "Case detail page"
+          ]
+        },
+        {
+          "step_id": "03-02",
+          "name": "Minimal Case Creation - Required Fields Only",
+          "description": "Verify that a case can be created with only required fields (name and diagnosis). Optional fields are stored as empty/null without error.",
+          "acceptance_criteria": [
+            "Case is created successfully with only name and diagnosis",
+            "Optional fields are stored as empty"
+          ],
+          "test_file": "tests/acceptance/asia-vet-oncology/milestone-2-clinical-workflow.feature",
+          "scenario_name": "Veterinarian creates a case with only required fields",
+          "files_to_modify": [
+            "backend/asia/services/case_service.py",
+            "frontend/src/components/cases/CaseForm.tsx"
+          ],
+          "dependencies": ["03-01"],
+          "estimated_hours": 1,
+          "deliverables": [
+            "Minimal case creation validated",
+            "Optional field handling in form and API"
+          ]
+        },
+        {
+          "step_id": "03-03",
+          "name": "Case Context Injection in Queries",
+          "description": "Implement context injection when a query is submitted within a case. Patient context (breed, age, diagnosis, stage, immunophenotype) is prepended to the LLM synthesis prompt. Query and response are saved to case history. POST /api/cases/{id}/query endpoint.",
+          "acceptance_criteria": [
+            "Response considers the patient context when querying within a case",
+            "Query and response are saved in the case's history"
+          ],
+          "test_file": "tests/acceptance/asia-vet-oncology/milestone-2-clinical-workflow.feature",
+          "scenario_name": "Query within a case automatically includes patient context",
+          "files_to_modify": [
+            "backend/asia/domain/context_injection.py",
+            "backend/asia/services/rag_pipeline.py",
+            "backend/asia/services/case_service.py",
+            "backend/asia/api/routes/cases.py",
+            "backend/asia/adapters/pg_query_log_repository.py",
+            "frontend/src/app/cases/[id]/page.tsx"
+          ],
+          "dependencies": ["03-01", "01-03"],
+          "estimated_hours": 4,
+          "deliverables": [
+            "Context injection template builder (pure function)",
+            "Case-contextualized query endpoint",
+            "Query log saved to case history"
+          ]
+        },
+        {
+          "step_id": "03-04",
+          "name": "Case History - Chronological Query List",
+          "description": "Implement case history view showing all queries in chronological order with most recent at top. Each entry shows query text, timestamp, and expandable full response.",
+          "acceptance_criteria": [
+            "All queries within a case are listed with timestamps",
+            "Most recent query appears at the top",
+            "Full response for any past query is viewable"
+          ],
+          "test_file": "tests/acceptance/asia-vet-oncology/milestone-2-clinical-workflow.feature",
+          "scenario_name": "Case history shows all queries in chronological order",
+          "files_to_modify": [
+            "frontend/src/components/cases/QueryHistory.tsx",
+            "frontend/src/app/cases/[id]/page.tsx",
+            "backend/asia/api/routes/cases.py"
+          ],
+          "dependencies": ["03-03"],
+          "estimated_hours": 3,
+          "deliverables": [
+            "QueryHistory frontend component",
+            "Chronological query list with expandable responses"
+          ]
+        },
+        {
+          "step_id": "03-05",
+          "name": "Case Data Persistence Across Sessions",
+          "description": "Verify that case data (patient details and query history) persists across browser sessions. Data is stored in PostgreSQL and survives application restarts.",
+          "acceptance_criteria": [
+            "All patient details are intact after reopening ASIA",
+            "All previous queries and responses are available"
+          ],
+          "test_file": "tests/acceptance/asia-vet-oncology/milestone-2-clinical-workflow.feature",
+          "scenario_name": "Case data persists across sessions",
+          "files_to_modify": [
+            "frontend/src/app/cases/page.tsx",
+            "frontend/src/app/cases/[id]/page.tsx"
+          ],
+          "dependencies": ["03-04"],
+          "estimated_hours": 1,
+          "deliverables": [
+            "Session persistence validated",
+            "Cases list page with navigation"
+          ]
+        },
+        {
+          "step_id": "03-06",
+          "name": "Case Creation Validation - Required Fields Missing",
+          "description": "Implement validation that prevents case creation when required fields (name, diagnosis) are missing. Show clear Italian error message. No incomplete case is stored.",
+          "acceptance_criteria": [
+            "Case creation fails with a clear message about the missing required field",
+            "No incomplete case is stored"
+          ],
+          "test_file": "tests/acceptance/asia-vet-oncology/milestone-2-clinical-workflow.feature",
+          "scenario_name": "Case creation fails when required fields are missing",
+          "files_to_modify": [
+            "backend/asia/services/case_service.py",
+            "backend/asia/api/routes/cases.py",
+            "frontend/src/components/cases/CaseForm.tsx"
+          ],
+          "dependencies": ["03-01"],
+          "estimated_hours": 1,
+          "deliverables": [
+            "Server-side validation for required case fields",
+            "Client-side validation with Italian messages"
+          ]
+        },
+        {
+          "step_id": "03-07",
+          "name": "Explain Paper - In Corpus",
+          "description": "Implement Explain This Paper feature for papers in the ASIA corpus. POST /api/explain-paper endpoint accepts a DOI, retrieves the paper from the corpus, and generates a structured clinical summary in Italian via SSE. Summary includes study objective, methodology, key results, practical implications, and corpus context sections.",
+          "acceptance_criteria": [
+            "Veterinarian receives a structured clinical summary in Italian",
+            "Summary includes sections for study objective, methodology, key results, practical implications, and corpus context"
+          ],
+          "test_file": "tests/acceptance/asia-vet-oncology/milestone-2-clinical-workflow.feature",
+          "scenario_name": "Veterinarian gets a structured summary of a paper in the corpus",
+          "files_to_modify": [
+            "backend/asia/services/paper_explainer.py",
+            "backend/asia/api/routes/explain_paper.py",
+            "frontend/src/app/explain/page.tsx"
+          ],
+          "dependencies": ["01-03", "01-02"],
+          "estimated_hours": 4,
+          "deliverables": [
+            "Paper explainer service",
+            "Explain paper API endpoint with SSE",
+            "Explain paper frontend page"
+          ]
+        },
+        {
+          "step_id": "03-08",
+          "name": "Explain Paper - Abstract Only (Not in Corpus)",
+          "description": "When a DOI is submitted for a paper not in the corpus, fetch the abstract from PubMed or Semantic Scholar and generate an abstract-based summary. Display a warning note that the summary is based on the abstract only.",
+          "acceptance_criteria": [
+            "Veterinarian receives a summary based on the paper abstract",
+            "A note warns that the summary is based on the abstract only"
+          ],
+          "test_file": "tests/acceptance/asia-vet-oncology/milestone-2-clinical-workflow.feature",
+          "scenario_name": "Paper not in the corpus produces an abstract-based summary",
+          "files_to_modify": [
+            "backend/asia/services/paper_explainer.py",
+            "backend/asia/adapters/pubmed_fetcher.py",
+            "backend/asia/adapters/semantic_scholar_fetcher.py",
+            "frontend/src/app/explain/page.tsx"
+          ],
+          "dependencies": ["03-07"],
+          "estimated_hours": 3,
+          "deliverables": [
+            "External paper fetch via PubMed/Semantic Scholar",
+            "Abstract-only summary with warning note"
+          ]
+        },
+        {
+          "step_id": "03-09",
+          "name": "Explain Paper - Invalid DOI Error",
+          "description": "When an invalid or non-existent DOI is submitted, display a helpful Italian error message suggesting to verify the DOI or try the paper title instead.",
+          "acceptance_criteria": [
+            "Error message indicates the paper could not be found",
+            "Suggestion to verify the DOI or try the paper title instead"
+          ],
+          "test_file": "tests/acceptance/asia-vet-oncology/milestone-2-clinical-workflow.feature",
+          "scenario_name": "Invalid DOI returns a helpful error message",
+          "files_to_modify": [
+            "backend/asia/services/paper_explainer.py",
+            "backend/asia/api/routes/explain_paper.py",
+            "frontend/src/app/explain/page.tsx"
+          ],
+          "dependencies": ["03-07"],
+          "estimated_hours": 1,
+          "deliverables": [
+            "DOI validation with Italian error messages",
+            "Helpful suggestions on DOI errors"
+          ]
+        },
+        {
+          "step_id": "03-10",
+          "name": "Minimal Case Context Query",
+          "description": "Verify that querying within a case that has only required fields (name and diagnosis, no breed/age/stage) still produces a valid synthesis. Context injection omits empty optional fields gracefully.",
+          "acceptance_criteria": [
+            "Veterinarian receives a synthesis in Italian for a minimal-context case",
+            "Response is not negatively affected by the missing optional fields"
+          ],
+          "test_file": "tests/acceptance/asia-vet-oncology/milestone-2-clinical-workflow.feature",
+          "scenario_name": "Query within a case with minimal context still produces a response",
+          "files_to_modify": [
+            "backend/asia/domain/context_injection.py"
+          ],
+          "dependencies": ["03-03", "03-02"],
+          "estimated_hours": 1,
+          "deliverables": [
+            "Context injection handles missing optional fields",
+            "Minimal case query produces valid response"
+          ]
+        },
+        {
+          "step_id": "03-11",
+          "name": "Empty DOI Validation",
+          "description": "Frontend validation prevents submitting an empty DOI field. Display an Italian message asking the user to enter a DOI or paper title. No request is sent to the backend.",
+          "acceptance_criteria": [
+            "Empty DOI submission shows a message asking to enter a DOI or paper title",
+            "No request is sent to the backend"
+          ],
+          "test_file": "tests/acceptance/asia-vet-oncology/milestone-2-clinical-workflow.feature",
+          "scenario_name": "Empty DOI input shows a validation message",
+          "files_to_modify": [
+            "frontend/src/app/explain/page.tsx"
+          ],
+          "dependencies": ["03-07"],
+          "estimated_hours": 1,
+          "deliverables": [
+            "Client-side DOI validation",
+            "Italian validation message"
+          ]
+        }
+      ]
+    }
+  ],
+  "validation": {
+    "status": "pending_review",
+    "total_steps": 33,
+    "total_scenarios": 30,
+    "infrastructure_steps": 2,
+    "scenario_mapped_steps": 31,
+    "coverage_notes": "Steps 01-01 and 01-02 are infrastructure setup without acceptance scenarios. All 30 acceptance scenarios (3 WS + 17 M1 + 11 M2, including 2 property scenarios) are mapped to steps. Property scenarios M1-P1 and M1-P2 are mapped to steps 02-16 and 02-17 respectively."
+  },
+  "scenario_index": {
+    "WS-1": "01-03",
+    "WS-2": "01-04",
+    "WS-3": "01-05",
+    "M1-1": "02-01",
+    "M1-2": "02-02",
+    "M1-3": "02-03",
+    "M1-4": "02-04",
+    "M1-5": "02-05",
+    "M1-6": "02-06",
+    "M1-7": "02-07",
+    "M1-8": "02-08",
+    "M1-9": "02-09",
+    "M1-10": "02-10",
+    "M1-11": "02-11",
+    "M1-12": "02-12",
+    "M1-13": "02-13",
+    "M1-14": "02-14",
+    "M1-15": "02-15",
+    "M1-P1": "02-16",
+    "M1-P2": "02-17",
+    "M2-1": "03-01",
+    "M2-2": "03-02",
+    "M2-3": "03-03",
+    "M2-4": "03-04",
+    "M2-5": "03-05",
+    "M2-6": "03-06",
+    "M2-7": "03-07",
+    "M2-8": "03-08",
+    "M2-9": "03-09",
+    "M2-10": "03-10",
+    "M2-11": "03-11"
+  }
+}

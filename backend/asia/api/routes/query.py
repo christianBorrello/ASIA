@@ -36,6 +36,7 @@ async def submit_query(body: QueryRequest, request: Request):
         return _stream_response(result)
 
     return {
+        "query_text": body.text,
         "synthesis": result["synthesis"],
         "evidence_level": result["evidence_level"],
         "evidence_score": result.get("evidence_score"),

@@ -20,7 +20,7 @@ Feature: Milestone 1 -- Demo Ready
     Then she sees 5 pre-loaded clinical queries as clickable cards
     And the queries cover first-line protocol, protocol comparison, rescue protocols, prognosis, and dose adjustment
 
-  @US-03 @skip
+  @US-03
   Scenario: Clicking a pre-loaded query submits it to the evidence pipeline
     Given Dott.ssa Mancini sees the pre-loaded query "CHOP-19 vs CHOP-25: differenze negli outcome?"
     When she clicks the query card
