@@ -138,7 +138,7 @@ Feature: Milestone 1 -- Demo Ready
 
   # ===== Property-Shaped Scenarios =====
 
-  @property @US-02 @US-05 @skip
+  @property @US-02 @US-05
   Scenario: No response ever contains fabricated citations
     Given any clinical query submitted to ASIA
     When the response includes citations

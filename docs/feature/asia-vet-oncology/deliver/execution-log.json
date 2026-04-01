@@ -533,6 +533,34 @@
       "s": "SKIPPED",
       "d": "APPROVED_SKIP: connection loss not deterministically testable",
       "t": "2026-04-01T10:28:46Z"
+    },
+    {
+      "sid": "02-16",
+      "p": "PREPARE",
+      "s": "EXECUTED",
+      "d": "PASS",
+      "t": "2026-04-01T10:28:55Z"
+    },
+    {
+      "sid": "02-16",
+      "p": "RED_ACCEPTANCE",
+      "s": "EXECUTED",
+      "d": "PASS",
+      "t": "2026-04-01T10:29:14Z"
+    },
+    {
+      "sid": "02-16",
+      "p": "RED_UNIT",
+      "s": "SKIPPED",
+      "d": "NOT_APPLICABLE: already covered by existing 01-04 work",
+      "t": "2026-04-01T10:29:14Z"
+    },
+    {
+      "sid": "02-16",
+      "p": "GREEN",
+      "s": "EXECUTED",
+      "d": "PASS",
+      "t": "2026-04-01T10:29:14Z"
     }
   ]
 }
