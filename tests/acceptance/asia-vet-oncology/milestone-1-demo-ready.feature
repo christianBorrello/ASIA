@@ -80,7 +80,7 @@ Feature: Milestone 1 -- Demo Ready
     And the table has columns for protocol name, remission rate, and median survival
     And each row in the table has a citation reference
 
-  @US-04 @skip
+  @US-04
   Scenario: Non-comparison query does not generate a table
     Given Dott.ssa Mancini submits "Prognosi linfoma T-cell vs B-cell?"
     When the response is complete
