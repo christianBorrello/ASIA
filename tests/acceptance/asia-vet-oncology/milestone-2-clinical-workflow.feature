@@ -19,7 +19,7 @@ Feature: Milestone 2 -- Clinical Workflow
     Then the case "Luna" is created successfully
     And the case page displays all the entered patient details
 
-  @US-06 @skip
+  @US-06
   Scenario: Veterinarian creates a case with only required fields
     Given Dott.ssa Mancini navigates to case creation
     When she creates a case with only name "Rex" and diagnosis "Linfoma multicentrico"

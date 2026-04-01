@@ -24,7 +24,20 @@ class CaseService:
         immunophenotype: str | None = None,
         notes: str | None = None,
     ) -> Case:
-        raise NotImplementedError("Case creation not yet implemented")
+        now = datetime.now(timezone.utc)
+        case = Case(
+            id=uuid.uuid4(),
+            patient_name=patient_name,
+            diagnosis=diagnosis,
+            breed=breed,
+            age=age,
+            stage=stage,
+            immunophenotype=immunophenotype,
+            notes=notes,
+            created_at=now,
+            updated_at=now,
+        )
+        return await self._case_repository.create(case)
 
     async def get_case(self, case_id: uuid.UUID) -> Case | None:
-        raise NotImplementedError("Case retrieval not yet implemented")
+        return await self._case_repository.get(case_id)
