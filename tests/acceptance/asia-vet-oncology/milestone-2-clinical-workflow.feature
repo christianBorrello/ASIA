@@ -33,7 +33,7 @@ Feature: Milestone 2 -- Clinical Workflow
     Then the response considers the patient context
     And the query and response are saved in Luna's case history
 
-  @US-06 @skip
+  @US-06
   Scenario: Case history shows all queries in chronological order
     Given Dott.ssa Mancini has made 3 queries within the case "Luna"
     When she views Luna's case page
