@@ -12,7 +12,7 @@ Feature: Milestone 2 -- Clinical Workflow
 
   # ===== US-06: Basic Case Mode =====
 
-  @US-06 @skip
+  @US-06
   Scenario: Veterinarian creates a new case with full patient information
     Given Dott.ssa Mancini navigates to case creation
     When she creates a case with name "Luna", breed "Golden Retriever", age "7 anni", diagnosis "Linfoma multicentrico", stage "III", immunophenotype "B-cell", and notes "Substadio a, buone condizioni generali"

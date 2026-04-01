@@ -17,21 +17,6 @@ scenarios("../milestone-1-demo-ready.feature")
 # ---------------------------------------------------------------------------
 
 
-@given("the ASIA application is running", target_fixture="running_app")
-def asia_running(test_client, seeded_corpus):
-    """Verify the application is reachable via the test client."""
-    return test_client
-
-
-@given(
-    "the corpus contains papers about canine multicentric lymphoma",
-    target_fixture="corpus",
-)
-def corpus_seeded(seeded_corpus):
-    """Corpus is seeded as a session fixture."""
-    return seeded_corpus
-
-
 @given("Dott.ssa Mancini opens the ASIA homepage", target_fixture="homepage")
 def open_homepage(test_client):
     """Fetch homepage metadata via API."""

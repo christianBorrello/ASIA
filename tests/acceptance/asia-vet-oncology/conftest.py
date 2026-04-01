@@ -18,7 +18,9 @@ from pathlib import Path
 
 import pytest
 
-from asia.domain.models import Chunk, Paper
+from pytest_bdd import given
+
+from asia.domain.models import Case, CaseQuery, Chunk, Paper
 
 
 # ---------------------------------------------------------------------------
@@ -164,6 +166,29 @@ class InMemoryPaperRepository:
         return None
 
 
+class InMemoryCaseRepository:
+    """Fake case repository storing cases in memory."""
+
+    def __init__(self) -> None:
+        self._cases: dict[uuid.UUID, Case] = {}
+        self._queries: dict[uuid.UUID, list[CaseQuery]] = {}
+
+    async def create(self, case: Case) -> Case:
+        self._cases[case.id] = case
+        self._queries[case.id] = []
+        return case
+
+    async def get(self, case_id: uuid.UUID) -> Case | None:
+        return self._cases.get(case_id)
+
+    async def list_queries(self, case_id: uuid.UUID) -> list[CaseQuery]:
+        return self._queries.get(case_id, [])
+
+    def clear(self) -> None:
+        self._cases.clear()
+        self._queries.clear()
+
+
 # ---------------------------------------------------------------------------
 # Session-scoped fixtures (expensive setup, created once)
 # ---------------------------------------------------------------------------
@@ -224,19 +249,26 @@ QUERY_RESPONSES = {
 
 
 @pytest.fixture(scope="session")
+def case_repo():
+    """In-memory case repository shared across session."""
+    return InMemoryCaseRepository()
+
+
+@pytest.fixture(scope="session")
 def paper_repo():
     """In-memory paper repository shared across session."""
     return InMemoryPaperRepository()
 
 
 @pytest.fixture(scope="session")
-def app(paper_repo):
+def app(paper_repo, case_repo):
     """
     Create the ASIA FastAPI application with test configuration.
 
     Uses in-memory repository and mocked LLM provider.
     """
     from asia.main import app as fastapi_app
+    from asia.services.case_service import CaseService
     from asia.services.rag_pipeline import RAGPipeline
 
     fake_llm = FakeLLMProvider(CANNED_SYNTHESIS, QUERY_RESPONSES)
@@ -249,6 +281,7 @@ def app(paper_repo):
     )
 
     fastapi_app.state.rag_pipeline = rag_pipeline
+    fastapi_app.state.case_service = CaseService(case_repo)
 
     return fastapi_app
 
@@ -315,16 +348,42 @@ def seeded_corpus(app, paper_repo):
 
 
 @pytest.fixture(autouse=True)
-def clean_cases(app):
+def clean_cases(app, case_repo):
     """
     Remove all cases and query logs between tests.
     Papers/corpus data is preserved (session-scoped).
     """
     yield
+    case_repo.clear()
 
 
 # ---------------------------------------------------------------------------
 # Mock providers for external services
+# ---------------------------------------------------------------------------
+
+
+# ---------------------------------------------------------------------------
+# Shared BDD Background steps
+# ---------------------------------------------------------------------------
+
+
+@given("the ASIA application is running", target_fixture="running_app")
+def asia_running(test_client, seeded_corpus):
+    """Verify the application is reachable via the test client."""
+    return test_client
+
+
+@given(
+    "the corpus contains papers about canine multicentric lymphoma",
+    target_fixture="corpus",
+)
+def corpus_seeded(seeded_corpus):
+    """Corpus is seeded as a session fixture."""
+    return seeded_corpus
+
+
+# ---------------------------------------------------------------------------
+# Mock LLM responses fixture
 # ---------------------------------------------------------------------------
 
 

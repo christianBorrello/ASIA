@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from asia.api.middleware.error_handler import register_error_handlers
-from asia.api.routes import metadata, query
+from asia.api.routes import cases, metadata, query
 
 app = FastAPI(
     title="ASIA",
@@ -20,6 +20,7 @@ app.add_middleware(
 
 register_error_handlers(app)
 
+app.include_router(cases.router)
 app.include_router(query.router)
 app.include_router(metadata.router)
 
