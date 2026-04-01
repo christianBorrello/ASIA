@@ -126,7 +126,31 @@ CANNED_Q2_SYNTHESIS = (
     "senza differenze statisticamente significative [4][5][6]."
 )
 
+CANNED_Q3_SYNTHESIS = (
+    "Per la recidiva precoce dopo CHOP, le opzioni di rescue "
+    "includono LOPP [1], LAP [2] e protocolli a base di "
+    "rabacfosadina [3]. La scelta dipende dalla risposta "
+    "iniziale e dalla tolleranza del paziente."
+)
+
+CANNED_Q4_SYNTHESIS = (
+    "Il linfoma B-cell ha una prognosi significativamente "
+    "migliore rispetto al T-cell [1][2]. La sopravvivenza "
+    "mediana per B-cell e di 10-14 mesi contro 5-8 mesi "
+    "per T-cell [1][2]."
+)
+
+CANNED_Q5_SYNTHESIS = (
+    "Per neutropenia di grado 1-2, si consiglia il ritardo di "
+    "1 settimana senza riduzione della dose [1]. Per grado 3-4, "
+    "riduzione del 20-25% della dose di doxorubicina e "
+    "considerare lo switch a protocolli alternativi [1][2]."
+)
+
 QUERY_RESPONSES = {
+    "recidiva precoce": CANNED_Q3_SYNTHESIS,
+    "prognosi linfoma t-cell": CANNED_Q4_SYNTHESIS,
+    "aggiustamento dose": CANNED_Q5_SYNTHESIS,
     "chop-19 vs chop-25": CANNED_Q2_SYNTHESIS,
 }
 

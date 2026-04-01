@@ -45,7 +45,7 @@ Feature: Milestone 1 -- Demo Ready
     And the response cites the Sorenmo multicenter study
     And no citation refers to a non-existent paper
 
-  @US-03 @skip
+  @US-03
   Scenario: Rescue protocol query produces an accurate cited response
     Given the pre-loaded query "Protocolli di rescue per recidiva precoce dopo CHOP?" is submitted
     When the response is complete
