@@ -41,7 +41,7 @@ Feature: Milestone 2 -- Clinical Workflow
     And the most recent query appears at the top
     And she can view the full response for any past query
 
-  @US-06 @skip
+  @US-06
   Scenario: Case data persists across sessions
     Given Dott.ssa Mancini created the case "Luna" in a previous session
     When she reopens ASIA and navigates to Luna's case
