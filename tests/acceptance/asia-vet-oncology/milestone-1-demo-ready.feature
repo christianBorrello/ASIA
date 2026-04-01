@@ -97,7 +97,7 @@ Feature: Milestone 1 -- Demo Ready
     And the message explains the corpus covers canine multicentric lymphoma
     And suggestions are provided to rephrase or try pre-loaded queries
 
-  @US-05 @skip
+  @US-05
   Scenario: ASIA never fabricates an answer when evidence is missing
     Given the corpus has no papers relevant to "Chemioterapia per carcinoma polmonare nel gatto"
     When Dott.ssa Mancini submits this query

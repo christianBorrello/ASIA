@@ -63,9 +63,22 @@ class FakeLLMProvider:
 
 
 class FakeEmbeddingProvider:
-    """Returns deterministic 384-dimensional vectors."""
+    """Returns deterministic 384-dimensional vectors.
+
+    Off-topic terms (non-canine-lymphoma species/diseases) produce
+    orthogonal vectors to ensure the confidence threshold rejects them.
+    """
+
+    _OFF_TOPIC_MARKERS = {"gatto", "felino", "feline", "osteosarcoma", "polmonare"}
 
     def embed_text(self, text: str) -> list[float]:
+        words = set(text.lower().split())
+        if words & self._OFF_TOPIC_MARKERS:
+            # Off-topic: return a fixed orthogonal vector that produces
+            # near-zero similarity with any on-topic corpus embedding.
+            vec = [0.0] * 384
+            vec[0] = -1.0
+            return vec
         vec = [0.0] * 384
         for i, char in enumerate(text[:384]):
             vec[i] = ord(char) / 1000.0
