@@ -28,7 +28,7 @@ Feature: Milestone 1 -- Demo Ready
     And a streaming response begins
     And the query text is displayed at the top of the response
 
-  @US-03 @skip
+  @US-03
   Scenario: First-line protocol query produces an accurate cited response
     Given the pre-loaded query "Qual e il protocollo di prima linea per un linfoma multicentrico B-cell stadio III?" is submitted
     When the response is complete
