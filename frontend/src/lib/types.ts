@@ -28,6 +28,14 @@ export interface QueryResponse {
   message?: string;
   scope_explanation?: string;
   suggestions?: string[];
+  used_fallback?: boolean;
+  fallback_model?: string;
+  primary_model?: string;
+}
+
+export interface LlmStatusResponse {
+  primary_available: boolean;
+  model: string;
 }
 
 export interface ComparisonTable {

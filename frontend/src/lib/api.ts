@@ -69,4 +69,8 @@ export function explainPaper(doi: string) {
   });
 }
 
+export function checkLlmStatus() {
+  return fetchApi<import("./types").LlmStatusResponse>("/api/llm-status");
+}
+
 export { API_BASE };

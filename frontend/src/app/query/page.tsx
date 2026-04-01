@@ -2,13 +2,106 @@
 
 import { Suspense, useEffect, useState, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { submitQuery } from "@/lib/api";
+import { submitQuery, checkLlmStatus } from "@/lib/api";
 import type { QueryResponse } from "@/lib/types";
 import SearchBox from "@/components/shared/SearchBox";
 import EvidenceLevel from "@/components/shared/EvidenceLevel";
 import SynthesisView from "@/components/query/SynthesisView";
 import SourcePanel from "@/components/query/SourcePanel";
 import ComparisonTable from "@/components/query/ComparisonTable";
+
+interface FallbackBannerProps {
+  fallbackModel: string;
+  onRetry: () => void;
+  onDismiss: () => void;
+}
+
+function FallbackBanner({ fallbackModel, onRetry, onDismiss }: FallbackBannerProps) {
+  const [polling, setPolling] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!polling) return;
+
+    let cancelled = false;
+
+    const poll = async () => {
+      try {
+        const status = await checkLlmStatus();
+        if (cancelled) return;
+        if (status.primary_available) {
+          setPolling(false);
+          setStatusMessage(null);
+          onRetry();
+          return;
+        }
+      } catch {
+        // Polling failure is non-fatal; will retry next interval
+      }
+    };
+
+    // Check immediately, then every 15 seconds
+    poll();
+    const intervalId = setInterval(poll, 15_000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(intervalId);
+    };
+  }, [polling, onRetry]);
+
+  const handleRetryClick = () => {
+    setPolling(true);
+    setStatusMessage("In attesa del modello principale...");
+  };
+
+  return (
+    <div className="card p-4 border-amber-300 bg-amber-50 mb-6">
+      <div className="flex items-start gap-3">
+        <svg
+          className="w-5 h-5 text-amber-600 shrink-0 mt-0.5"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth={1.5}
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
+          />
+        </svg>
+        <div className="flex-1">
+          <p className="text-sm text-amber-800">
+            Risposta generata con un modello ridotto (<strong>{fallbackModel}</strong>) perch&eacute; il modello
+            principale &egrave; temporaneamente non disponibile. La qualit&agrave; potrebbe essere inferiore.
+          </p>
+          <div className="mt-3 flex items-center gap-3">
+            {polling ? (
+              <div className="flex items-center gap-2 text-sm text-amber-700">
+                <div className="w-4 h-4 rounded-full border-2 border-amber-400/30 border-t-amber-600 animate-spin" />
+                <span>{statusMessage}</span>
+              </div>
+            ) : (
+              <button
+                onClick={handleRetryClick}
+                className="text-sm font-medium text-amber-800 bg-amber-200 hover:bg-amber-300 px-3 py-1.5 rounded-md transition-colors"
+              >
+                Riprova con il modello principale
+              </button>
+            )}
+            <button
+              onClick={onDismiss}
+              className="text-sm text-amber-700 hover:text-amber-900 underline underline-offset-2 transition-colors"
+            >
+              Continua con questa risposta
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function QueryContent() {
   const searchParams = useSearchParams();
@@ -19,8 +112,10 @@ function QueryContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeCitation, setActiveCitation] = useState<number | null>(null);
+  const [fallbackDismissed, setFallbackDismissed] = useState(false);
 
   const executeQuery = useCallback(async (text: string) => {
+    setFallbackDismissed(false);
     setLoading(true);
     setError(null);
     setResponse(null);
@@ -42,6 +137,19 @@ function QueryContent() {
     router.push(`/query?q=${encodeURIComponent(text)}`);
   };
 
+  const handleRetryWithPrimary = useCallback(() => {
+    if (queryText) {
+      executeQuery(queryText);
+    }
+  }, [queryText, executeQuery]);
+
+  const handleDismissFallback = useCallback(() => {
+    setFallbackDismissed(true);
+  }, []);
+
+  const showFallbackBanner =
+    response?.used_fallback === true && !fallbackDismissed && !loading;
+
   const isNoEvidence = response && !response.synthesis && response.message;
 
   return (
@@ -55,6 +163,14 @@ function QueryContent() {
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Domanda</p>
           <h1 className="font-serif text-xl md:text-2xl text-gray-900 leading-snug">{queryText}</h1>
         </div>
+      )}
+
+      {showFallbackBanner && response?.fallback_model && (
+        <FallbackBanner
+          fallbackModel={response.fallback_model}
+          onRetry={handleRetryWithPrimary}
+          onDismiss={handleDismissFallback}
+        />
       )}
 
       {loading && (
