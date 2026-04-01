@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from asia.api.middleware.error_handler import register_error_handlers
-from asia.api.routes import cases, metadata, query
+from asia.api.routes import cases, explain_paper, metadata, query
 
 app = FastAPI(
     title="ASIA",
@@ -23,6 +23,7 @@ register_error_handlers(app)
 app.include_router(cases.router)
 app.include_router(query.router)
 app.include_router(metadata.router)
+app.include_router(explain_paper.router)
 
 
 @app.get("/api/health")

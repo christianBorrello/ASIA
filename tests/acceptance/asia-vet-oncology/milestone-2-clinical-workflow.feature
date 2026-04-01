@@ -57,10 +57,10 @@ Feature: Milestone 2 -- Clinical Workflow
 
   # ===== US-07: Explain This Paper =====
 
-  @US-07 @skip
+  @US-07
   Scenario: Veterinarian gets a structured summary of a paper in the corpus
     Given Dott.ssa Mancini navigates to "Explain a Paper"
-    When she submits the DOI "10.1111/vco.12345" for a paper in the corpus
+    When she submits the DOI "10.1111/jvim.12345" for a paper in the corpus
     Then she receives a structured clinical summary in Italian
     And the summary includes sections for study objective, methodology, key results, practical implications, and corpus context
 
