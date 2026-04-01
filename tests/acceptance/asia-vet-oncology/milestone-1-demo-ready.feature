@@ -145,7 +145,7 @@ Feature: Milestone 1 -- Demo Ready
     Then every cited paper exists in the corpus or in PubMed
     And every citation marker in the synthesis corresponds to a source panel entry
 
-  @property @US-01 @skip
+  @property @US-01
   Scenario: Medical disclaimer is visible on every page
     Given any page in the ASIA application
     Then the medical disclaimer is visible
