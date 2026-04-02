@@ -3,14 +3,14 @@
 Driving ports: GET /api/corpus-metadata, GET /api/pre-loaded-queries, GET /api/llm-status
 """
 
+from datetime import date
+
 from fastapi import APIRouter, Request
 
 from asia.config.pre_loaded_queries import PRE_LOADED_QUERIES
 
 router = APIRouter(prefix="/api", tags=["metadata"])
 
-CORPUS_DATE = "2026-04-01"
-PAPER_COUNT = 23
 DISCLAIMER_TEXT = (
     "Questo strumento è un supporto informativo alla decisione clinica. "
     "Non sostituisce il giudizio del veterinario."
@@ -18,10 +18,24 @@ DISCLAIMER_TEXT = (
 
 
 @router.get("/corpus-metadata")
-async def get_corpus_metadata() -> dict:
+async def get_corpus_metadata(request: Request) -> dict:
+    """Return corpus stats from the database."""
+    repo = request.app.state.rag_pipeline._repo
+
+    try:
+        pool = await repo._get_pool()
+        async with pool.acquire() as conn:
+            paper_count = await conn.fetchval("SELECT COUNT(*) FROM papers")
+            latest_date = await conn.fetchval(
+                "SELECT MAX(ingested_at)::date FROM papers"
+            )
+    except Exception:
+        paper_count = 0
+        latest_date = None
+
     return {
-        "corpus_date": CORPUS_DATE,
-        "paper_count": PAPER_COUNT,
+        "corpus_date": str(latest_date) if latest_date else str(date.today()),
+        "paper_count": paper_count or 0,
         "disclaimer_text": DISCLAIMER_TEXT,
     }
 
