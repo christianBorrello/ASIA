@@ -235,7 +235,8 @@ echo ""
 # ---------------------------------------------------------------------------
 # Tail dei log in tempo reale — il trap si occupa del cleanup
 # ---------------------------------------------------------------------------
-tail -f "$LOG_DIR/backend.log" "$LOG_DIR/frontend.log" 2>/dev/null &
+# -n 0 = solo nuove righe, ignora il contenuto già scritto durante lo startup
+tail -n 0 -f "$LOG_DIR/backend.log" "$LOG_DIR/frontend.log" 2>/dev/null &
 TAIL_PID=$!
 
 # Attendi — Ctrl+C triggera il trap
