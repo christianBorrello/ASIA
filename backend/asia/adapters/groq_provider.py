@@ -5,7 +5,7 @@ import asyncio
 import logging
 from collections.abc import AsyncIterator
 
-from groq import AsyncGroq, InternalServerError
+from groq import AsyncGroq, InternalServerError, RateLimitError
 
 
 logger = logging.getLogger(__name__)
@@ -48,11 +48,25 @@ class GroqProvider:
         for attempt in range(self._max_retries + 1):
             try:
                 return await self._call_llm(self._model, messages)
-            except InternalServerError:
+            except (InternalServerError, RateLimitError) as e:
+                is_rate_limit = isinstance(e, RateLimitError)
+                error_type = "429 rate limit" if is_rate_limit else "503"
+
+                if is_rate_limit:
+                    # Rate limit: fallback immediately, no point retrying
+                    logger.warning(
+                        "Groq %s, falling back to %s immediately",
+                        error_type,
+                        self._fallback_model,
+                    )
+                    self._last_used_fallback = True
+                    return await self._call_llm(self._fallback_model, messages)
+
                 if attempt < self._max_retries:
                     delay = 2**attempt  # 1s, 2s
                     logger.warning(
-                        "Groq 503 on attempt %d/%d, retrying in %ds",
+                        "Groq %s on attempt %d/%d, retrying in %ds",
+                        error_type,
                         attempt + 1,
                         self._max_retries + 1,
                         delay,
@@ -61,7 +75,8 @@ class GroqProvider:
                     continue
                 # All retries exhausted -- fall back to smaller model
                 logger.warning(
-                    "Groq 503 after %d retries, falling back to %s",
+                    "Groq %s after %d retries, falling back to %s",
+                    error_type,
                     self._max_retries,
                     self._fallback_model,
                 )
@@ -101,7 +116,7 @@ class GroqProvider:
                 max_tokens=1,
             )
             return True
-        except InternalServerError:
+        except (InternalServerError, RateLimitError):
             return False
 
     async def _call_llm(
