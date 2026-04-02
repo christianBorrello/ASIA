@@ -30,7 +30,20 @@ async def submit_query(body: QueryRequest, request: Request):
     from asia.services.rag_pipeline import RAGPipeline
 
     rag_pipeline: RAGPipeline = request.app.state.rag_pipeline
-    result = await rag_pipeline.execute_query(body.text)
+    try:
+        result = await rag_pipeline.execute_query(body.text)
+    except Exception as e:
+        logger.error("RAG pipeline error: %s", e)
+        return {
+            "query_text": body.text,
+            "synthesis": None,
+            "evidence_level": None,
+            "sources": [],
+            "message": "Si è verificato un errore durante l'analisi. Riprova tra qualche istante.",
+            "suggestions": ["Riprova tra qualche istante", "Prova una delle domande suggerite"],
+            "disclaimer": DISCLAIMER,
+            "used_fallback": False,
+        }
 
     if body.stream:
         return _stream_response(result)
