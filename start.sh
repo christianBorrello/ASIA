@@ -33,6 +33,14 @@ BACKEND_PID=""
 FRONTEND_PID=""
 DB_STARTED=false
 
+# Pulisci log precedenti
+: > "$LOG_DIR/backend.log" 2>/dev/null
+: > "$LOG_DIR/frontend.log" 2>/dev/null
+
+# Kill eventuali processi orfani da avvii precedenti
+lsof -ti:8000 2>/dev/null | xargs kill -9 2>/dev/null || true
+lsof -ti:3000 2>/dev/null | xargs kill -9 2>/dev/null || true
+
 # ---------------------------------------------------------------------------
 # Cleanup — chiamato su SIGINT, SIGTERM, o EXIT
 # ---------------------------------------------------------------------------
@@ -233,12 +241,6 @@ echo -e "${BOLD}${GREEN}╚═════════════════�
 echo ""
 
 # ---------------------------------------------------------------------------
-# Tail dei log in tempo reale — il trap si occupa del cleanup
+# Attendi — Ctrl+C triggera il trap. Nessun tail: log in .logs/
 # ---------------------------------------------------------------------------
-# -n 0 = solo nuove righe, ignora il contenuto già scritto durante lo startup
-tail -n 0 -f "$LOG_DIR/backend.log" "$LOG_DIR/frontend.log" 2>/dev/null &
-TAIL_PID=$!
-
-# Attendi — Ctrl+C triggera il trap
 wait "$BACKEND_PID" "$FRONTEND_PID" 2>/dev/null || true
-kill "$TAIL_PID" 2>/dev/null || true
