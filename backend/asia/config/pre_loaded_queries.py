@@ -1,10 +1,12 @@
 """Pre-loaded clinical queries for the ASIA homepage.
 
-Single source of truth for the 5 critical queries displayed as clickable cards.
+Single source of truth for the clinical queries displayed as clickable cards.
+Covers both lymphoma and carcinoma corpora.
 See docs/feature/asia-vet-oncology/design/pre-loaded-queries.md for rationale.
 """
 
 PRE_LOADED_QUERIES = [
+    # --- Lymphoma queries ---
     {
         "id": "Q1",
         "text": "Qual e il protocollo di prima linea per un linfoma multicentrico B-cell stadio III?",
@@ -29,5 +31,21 @@ PRE_LOADED_QUERIES = [
         "id": "Q5",
         "text": "Aggiustamento dose doxorubicina per neutropenia?",
         "topic": "Gestione tossicita",
+    },
+    # --- Carcinoma queries ---
+    {
+        "id": "Q6",
+        "text": "Massa mediastinica nel cane: diagnosi differenziale tra timoma, carcinoma timico e linfoma",
+        "topic": "Diagnosi differenziale mediastino",
+    },
+    {
+        "id": "Q7",
+        "text": "Ipercalcemia paraneoplastica nel cane: cause e approccio diagnostico",
+        "topic": "Ipercalcemia paraneoplastica",
+    },
+    {
+        "id": "Q8",
+        "text": "Trattamento del timoma canino: chirurgia vs chemioterapia vs radioterapia",
+        "topic": "Trattamento timoma",
     },
 ]

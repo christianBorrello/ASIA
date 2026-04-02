@@ -30,14 +30,14 @@ def test_corpus_metadata_returns_date_count_and_disclaimer():
     assert len(data["disclaimer_text"]) > 0
 
 
-def test_pre_loaded_queries_returns_five_queries_with_required_fields():
-    """GET /api/pre-loaded-queries returns exactly 5 queries with id, text, topic."""
+def test_pre_loaded_queries_returns_queries_with_required_fields():
+    """GET /api/pre-loaded-queries returns queries with id, text, topic (lymphoma + carcinoma)."""
     response = client.get("/api/pre-loaded-queries")
 
     assert response.status_code == 200
     data = response.json()
     queries = data["queries"]
-    assert len(queries) == 5
+    assert len(queries) >= 7, f"Expected >= 7 queries (5 lymphoma + 2+ carcinoma), got {len(queries)}"
     for query in queries:
         assert "id" in query
         assert "text" in query

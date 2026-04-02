@@ -1,11 +1,20 @@
-"""Curated seed papers for canine multicentric lymphoma.
+"""Curated seed papers for canine veterinary oncology.
 
-Covers all 5 critical query topics:
+Covers 10 critical query topics across two corpora:
+
+Lymphoma corpus (24 papers):
 1. First-line CHOP protocol for B-cell lymphoma
 2. CHOP-19 vs CHOP-25 comparison
 3. Rescue protocols (Tanovea, LAP, LOPP, DMAC)
 4. T-cell vs B-cell prognosis
 5. Doxorubicin dose adjustment for neutropenia
+
+Carcinoma corpus (27 papers):
+6. Canine mediastinal/thoracic tumors (thymoma, thymic carcinoma)
+7. Carcinoma with paraneoplastic hypercalcemia
+8. Treatment protocols (surgery, chemotherapy, radiation)
+9. Prognosis and staging
+10. Differential diagnosis (carcinoma vs lymphoma)
 """
 from __future__ import annotations
 
@@ -257,3 +266,319 @@ SEED_PAPERS: list[dict] = [
         "sample_size": 290,
     },
 ]
+
+
+# ---------------------------------------------------------------------------
+# Canine carcinoma corpus -- mediastinal tumors, hypercalcemia, treatment,
+# prognosis, differential diagnosis
+# ---------------------------------------------------------------------------
+CANINE_CARCINOMA_PAPERS: list[dict] = [
+    # === TOPIC 6: Canine Mediastinal/Thoracic Tumors ===
+    {
+        "title": "Clinical features, treatment options, and outcome in dogs with thymoma: 116 cases (1999-2010)",
+        "authors": [{"name": "Robat CS"}, {"name": "Cesario L"}, {"name": "Gaeta R"}, {"name": "Miller M"}, {"name": "Schrempp D"}, {"name": "Chun R"}],
+        "year": 2013,
+        "journal": "Journal of the American Veterinary Medical Association",
+        "doi": "10.2460/javma.243.10.1448",
+        "abstract": "Objective: To characterize clinical features, diagnostic findings, treatment options, and outcome in dogs with thymoma. Design: Multi-institutional retrospective case series. Animals: 116 client-owned dogs with thymoma. Results: 38% were Labrador or Golden Retrievers. 17% had signs of myasthenia gravis and 34% had hypercalcemia at diagnosis. Surgical excision was performed in 72% of cases, yielding a median survival of 635 days compared to 76 days without surgery. Shorter survival was associated with concurrent tumors at diagnosis, lack of surgical intervention, and higher pathological staging. Dogs with thymoma had a good prognosis following surgery.",
+        "study_type": "retrospective",
+        "sample_size": 116,
+    },
+    {
+        "title": "Canine Epithelial Thymic Tumors: Outcome in 28 Dogs Treated by Surgery",
+        "authors": [{"name": "Martano M"}, {"name": "Buracco P"}, {"name": "Morello EM"}],
+        "year": 2021,
+        "journal": "Animals",
+        "doi": "10.3390/ani11123444",
+        "abstract": "Thymoma is a tumor rarely reported in dogs and should be differentiated from mediastinal lymphoma. Twenty-eight dogs were evaluated: 18 with thymomas and 10 with thymic carcinomas, classified according to WHO classification (Types A, AB, B1, B2, B3, and C). Median overall survival was 1173 days and disease-free interval was 903 days. Dogs with thymic carcinoma experienced significantly shorter disease-free intervals. Masaoka Stage III tumors demonstrated worse clinical outcomes. Surgical excision remains the primary treatment approach, with adjuvant therapies potentially extending survival in specific cases.",
+        "study_type": "retrospective",
+        "sample_size": 28,
+    },
+    {
+        "title": "Cranial mediastinal carcinomas in nine dogs",
+        "authors": [{"name": "Liptak JM"}, {"name": "Kamstock DA"}, {"name": "Dernell WS"}, {"name": "Ehrhart EJ"}, {"name": "Rizzo SA"}, {"name": "Withrow SJ"}],
+        "year": 2008,
+        "journal": "Veterinary and Comparative Oncology",
+        "doi": "10.1111/j.1476-5829.2007.00133.x",
+        "abstract": "Nine dogs with cranial mediastinal carcinomas were evaluated. Histological examination revealed four ectopic follicular cell thyroid carcinomas, one ectopic medullary cell thyroid carcinoma, two neuroendocrine carcinomas, and two anaplastic carcinomas. One dog presented with functional hyperthyroidism. Surgical resection was attempted in eight dogs with complete resection achieved in six. Post-operative complications included pulmonary thromboembolism in four dogs. The median survival time was 243 days. Local invasion and pleural effusion had minimal negative impact on outcomes.",
+        "study_type": "case_series",
+        "sample_size": 9,
+    },
+    {
+        "title": "A retrospective study of prognostic factors in 29 dogs with surgically treated thymic epithelial tumors",
+        "authors": [{"name": "Hashimoto Y"}, {"name": "Nagakubo D"}, {"name": "Muta K"}, {"name": "Tsuboi M"}, {"name": "Nakagawa T"}, {"name": "Nishimura R"}],
+        "year": 2025,
+        "journal": "Canadian Journal of Veterinary Research",
+        "doi": "",
+        "abstract": "This investigation examined whether paraneoplastic syndromes, Masaoka classification, and WHO classification correlate with survival outcomes in canine thymic epithelial tumors. Among 29 surgically treated dogs, hypercalcemia and anemia emerged as observable paraneoplastic manifestations. Hypercalcemia did not result in a statistical difference in median survival duration. WHO histological classification may provide prognostic value comparable to Masaoka staging for predicting patient outcomes.",
+        "study_type": "retrospective",
+        "sample_size": 29,
+    },
+    {
+        "title": "Preoperative management and postoperative complications in 9 dogs undergoing surgical treatment of thymic-associated myasthenia gravis",
+        "authors": [{"name": "Saylor SE"}, {"name": "Oblak ML"}, {"name": "Risselada M"}, {"name": "Thieman KM"}, {"name": "McKenna C"}, {"name": "Scharf VF"}],
+        "year": 2024,
+        "journal": "Canadian Veterinary Journal",
+        "doi": "",
+        "abstract": "Nine dogs with thymic epithelial tumors and paraneoplastic myasthenia gravis were studied. Six dogs received preoperative medical management lasting a median of 7.5 days. Three dogs experienced immediate postoperative complications resulting in euthanasia. Of the six survivors, three demonstrated complete clinical resolution of myasthenia gravis signs while two showed partial improvement. Dogs with thymic epithelial tumors and paraneoplastic myasthenia gravis are at high risk for perioperative complications.",
+        "study_type": "retrospective",
+        "sample_size": 9,
+    },
+    {
+        "title": "Mediastinal lymphoma in dogs is homogeneous compared to thymic epithelial neoplasia and is more likely to envelop the cranial vena cava in CT images",
+        "authors": [{"name": "Reeve EJ"}, {"name": "Mapletoft EK"}, {"name": "Schiborra F"}, {"name": "Maddox TW"}, {"name": "Lamb CR"}, {"name": "Warren-Smith CMR"}],
+        "year": 2020,
+        "journal": "Veterinary Radiology and Ultrasound",
+        "doi": "10.1111/vru.12812",
+        "abstract": "CT imaging characteristics of canine cranial mediastinal lymphoma (n=33) versus thymic epithelial neoplasia (n=29) were compared. Thymic epithelial neoplasia was associated with heterogeneous attenuation while lymphoma demonstrated homogeneous appearance. Lymphoma cases exhibited significantly greater likelihood of enveloping the cranial vena cava. Dogs with thymic tumors were older (median 8.6 vs 6.0 years). Standard deviation of Hounsfield units in post-contrast images exceeded 17HU for thymic neoplasms with 72% sensitivity and 79% specificity.",
+        "study_type": "retrospective",
+        "sample_size": 62,
+    },
+    # === TOPIC 7: Carcinoma with Paraneoplastic Hypercalcemia ===
+    {
+        "title": "Identification of parathyroid hormone-related protein in canine apocrine adenocarcinoma of the anal sac",
+        "authors": [{"name": "Rosol TJ"}, {"name": "Capen CC"}, {"name": "Danks JA"}, {"name": "Suva LJ"}, {"name": "Steinmeyer CL"}, {"name": "Hayman J"}, {"name": "Ebeling PR"}, {"name": "Martin TJ"}],
+        "year": 1990,
+        "journal": "Veterinary Pathology",
+        "doi": "10.1177/030098589002700203",
+        "abstract": "The presence of parathyroid hormone-related protein (PTHrP) was demonstrated in tumor cells derived from a hypercalcemic dog using Western and Northern blot analyses. A major protein with a molecular weight of approximately 18,000 daltons reacted with antisera to human PTHrP. Immunohistochemical staining revealed PTHrP in tumor samples, with positive results in 13 of 24 tumors maintained in mice and in 3 of 10 adenocarcinomas from hypercalcemic dogs. Canine tissues contained a PTHrP homologue likely relevant to malignancy-related hypercalcemia pathogenesis.",
+        "study_type": "prospective",
+        "sample_size": 34,
+    },
+    {
+        "title": "Parathyroid hormone (PTH)-related protein, PTH, and 1,25-dihydroxyvitamin D in dogs with cancer-associated hypercalcemia",
+        "authors": [{"name": "Rosol TJ"}, {"name": "Nagode LA"}, {"name": "Couto CG"}, {"name": "Hammer AS"}, {"name": "Chew DJ"}, {"name": "Peterson JL"}, {"name": "Ayl RD"}, {"name": "Steinmeyer CL"}, {"name": "Capen CC"}],
+        "year": 1992,
+        "journal": "Endocrinology",
+        "doi": "10.1210/endo.131.3.1505457",
+        "abstract": "PTHrP, PTH, and 1,25-dihydroxyvitamin D were measured in dogs with cancer-associated hypercalcemia. PTHrP levels were undetectable (less than 1.8 pM) in normal dogs but elevated in cancer-affected dogs, particularly those with anal sac adenocarcinomas (44.9 +/- 27 pM) and lymphoma. PTH concentrations remained normal except in dogs with parathyroid adenomas. Circulating concentrations of PTHrP are consistently increased in dogs with cancer-associated hypercalcemia, and PTHrP appears to play an important role in the induction of hypercalcemia.",
+        "study_type": "prospective",
+        "sample_size": 50,
+    },
+    {
+        "title": "Paraneoplastic hypercalcemia in a dog with thyroid carcinoma",
+        "authors": [{"name": "Lane AE"}, {"name": "Wyatt KM"}],
+        "year": 2012,
+        "journal": "Canadian Veterinary Journal",
+        "doi": "",
+        "abstract": "A male Beagle presented with thyroid carcinoma and elevated calcium levels. Following surgical removal of the thyroid tumor, the dog developed persistently low calcium requiring ongoing supplementation with calcitriol and calcium carbonate over two years. The dog died from renal failure with no evidence of thyroid carcinoma. This report documents the unusual progression from paraneoplastic hypercalcemia to chronic hypocalcemia post-thyroidectomy.",
+        "study_type": "case_series",
+        "sample_size": 1,
+    },
+    {
+        "title": "Hypercalcemia of Malignancy in a Dog Diagnosed With Cholangiocellular Carcinoma",
+        "authors": [{"name": "Martinez-Sogues L"}, {"name": "Vila A"}, {"name": "Roura X"}, {"name": "Pastor J"}, {"name": "Novellas R"}, {"name": "Marco A"}, {"name": "Cuvertoret-Sanz M"}, {"name": "Martinez J"}, {"name": "Solano-Gallego L"}],
+        "year": 2019,
+        "journal": "Topics in Companion Animal Medicine",
+        "doi": "10.1053/j.tcam.2019.02.001",
+        "abstract": "A four-year-old neutered male Golden Retriever presented with weight loss, polyuria, and polydipsia. Diagnostic findings included elevated ionized calcium, elevated kidney markers, and severe hyperlipasemia. Abdominal ultrasound revealed multiple hepatic nodules with cytological diagnosis indicating malignant epithelial neoplasia consistent with bile duct adenocarcinoma. Serum PTHrP concentration was increased. Treatment included fluids, furosemide, and prednisone. This represents the first report of malignant hypercalcemia associated with cholangiocellular carcinoma in a dog.",
+        "study_type": "case_series",
+        "sample_size": 1,
+    },
+    {
+        "title": "Animal Models of Cancer-Associated Hypercalcemia",
+        "authors": [{"name": "Kohart NA"}, {"name": "Elshafae SM"}, {"name": "Breitbach JT"}, {"name": "Rosol TJ"}],
+        "year": 2017,
+        "journal": "Veterinary Sciences",
+        "doi": "10.3390/vetsci4020021",
+        "abstract": "Humoral hypercalcemia of malignancy (HHM) is the most common mechanism of cancer-associated hypercalcemia and is due to tumor-derived factors including parathyroid hormone-related protein (PTHrP). The second mechanism involves localized bone destruction near tumors. This review compares disease presentation across humans and animals, examining spontaneous and experimentally-induced animal models used to study the mechanisms of cancer-associated hypercalcemia, spanning rodents, dogs, cats, and horses.",
+        "study_type": "review",
+        "sample_size": None,
+    },
+    {
+        "title": "Canine Apocrine Gland Anal Sac Adenocarcinoma: A Review",
+        "authors": [{"name": "Repasy AB"}, {"name": "Selmic LE"}, {"name": "Kisseberth WC"}],
+        "year": 2022,
+        "journal": "Topics in Companion Animal Medicine",
+        "doi": "10.1016/j.tcam.2022.100682",
+        "abstract": "Apocrine gland anal sac adenocarcinoma (AGASAC), while relatively uncommon, is one of the most common causes of paraneoplastic hypercalcemia in dogs. Approximately 25% of dogs with AGASAC present with hypercalcemia. Clinical presentations typically involve obstruction from the tumor or metastatic lymph nodes along with effects from hypercalcemia. The preferred treatment combines surgical removal with radiation and chemotherapy. Prolonged survival times are possible, particularly for dogs with smaller tumors receiving additional treatments for recurrence. Overall median survival is approximately 18 months.",
+        "study_type": "review",
+        "sample_size": None,
+    },
+    # === TOPIC 8: Treatment Protocols ===
+    {
+        "title": "Hypofractionated radiation therapy in the treatment of canine thymoma: Retrospective study of eight cases",
+        "authors": [{"name": "Goto S"}, {"name": "Murakami M"}, {"name": "Kawabe M"}, {"name": "Iwasaki R"}, {"name": "Heishima K"}, {"name": "Sakai H"}, {"name": "Mori T"}],
+        "year": 2017,
+        "journal": "Veterinary Radiology and Ultrasound",
+        "doi": "10.1111/vru.12525",
+        "abstract": "This retrospective observational study examined outcomes from a hypofractionated radiation protocol for confirmed thymoma cases in eight dogs. Treatment involved 48-49 Gy delivered over six to seven weekly fractions. Two dogs achieved complete responses, two achieved partial responses, and the disease remained stable in two, with a 50% overall response rate. Median survival time was not reached, with a 75% one-year survival rate. Side effects were common in the skin and/or lung and were self-limiting or asymptomatic. Hypofractionated radiation therapy was well tolerated and may serve as an option when surgery is declined or tumors are unresectable.",
+        "study_type": "retrospective",
+        "sample_size": 8,
+    },
+    {
+        "title": "Toceranib phosphate in the treatment of canine thyroid carcinoma: 42 cases (2009-2018)",
+        "authors": [{"name": "Sheppard-Olivares S"}, {"name": "Bello NM"}, {"name": "Wood E"}, {"name": "Szivek A"}, {"name": "Biller B"}, {"name": "Hocker S"}, {"name": "Wouda RM"}],
+        "year": 2020,
+        "journal": "Veterinary and Comparative Oncology",
+        "doi": "10.1111/vco.12571",
+        "abstract": "This retrospective analysis examined toceranib effectiveness in treating canine thyroid carcinoma across 42 dogs divided into treatment-naive (n=26) and prior therapy (n=16) groups. 88.4% and 75% of dogs experienced clinical benefit in the naive and prior therapy settings, respectively. Median progression-free intervals were 206 days (naive) and 1015 days (prior therapy). Median overall survival times were 563 days and 1082 days respectively. The research demonstrates minimal adverse effects and comparable outcomes between treatment settings.",
+        "study_type": "retrospective",
+        "sample_size": 42,
+    },
+    {
+        "title": "Retrospective Evaluation of a Combination of Carboplatin and Bleomycin for the Treatment of Canine Carcinomas",
+        "authors": [{"name": "Giuliano A"}, {"name": "Almendros A"}],
+        "year": 2022,
+        "journal": "Animals",
+        "doi": "10.3390/ani12182340",
+        "abstract": "Safety and efficacy of combined carboplatin-bleomycin chemotherapy was evaluated in 30 dogs with various carcinomas. Treatment was well tolerated with 53% developing mild side effects. Gastrointestinal issues appeared in 46% and hematological abnormalities in 30%. 76% of cases achieved clinical benefit (partial response plus stable disease) with 24% showing objective partial responses. The combination appears safe and potentially effective for some types of carcinomas, though larger prospective studies are needed.",
+        "study_type": "retrospective",
+        "sample_size": 30,
+    },
+    {
+        "title": "Safety evaluation of combination carboplatin and toceranib phosphate (Palladia) in tumour-bearing dogs: A phase I dose finding study",
+        "authors": [{"name": "Wouda RM"}, {"name": "Hocker SE"}, {"name": "Higginbotham ML"}],
+        "year": 2018,
+        "journal": "Veterinary and Comparative Oncology",
+        "doi": "10.1111/vco.12332",
+        "abstract": "Prospective phase I dose-finding clinical trial combining carboplatin with toceranib phosphate in tumor-bearing dogs. Eleven dogs with various malignancies received toceranib at 2.75 mg/kg orally every other day plus carboplatin IV every 21 days at escalating doses starting at 200 mg/m2. MTDs were identified as carboplatin 200 mg/m2 IV every 21 days and toceranib 2.75 mg/kg PO EOD. Neutropenia was the dose-limiting toxicity. Two subjects showed partial response while six maintained stable disease. Combination was well tolerated.",
+        "study_type": "prospective",
+        "sample_size": 11,
+    },
+    {
+        "title": "Evaluation of adjuvant carboplatin chemotherapy in the management of surgically excised anal sac apocrine gland adenocarcinoma in dogs",
+        "authors": [{"name": "Wouda RM"}, {"name": "Borrego J"}, {"name": "Keuler NS"}, {"name": "Stein T"}],
+        "year": 2016,
+        "journal": "Veterinary and Comparative Oncology",
+        "doi": "10.1111/vco.12068",
+        "abstract": "Carboplatin's role in post-operative care for canine anal sac apocrine gland adenocarcinoma was evaluated. Seventy-four dogs underwent surgery with 44 receiving adjuvant carboplatin and 30 receiving surgery alone. Median overall survival was 703 days and median time to progression was 384 days. Only primary tumor size and lymph node metastasis at diagnosis significantly impacted outcome. Carboplatin did not significantly improve OS or TTP but was associated with reduced local recurrence rates.",
+        "study_type": "retrospective",
+        "sample_size": 74,
+    },
+    {
+        "title": "A prospective, multi-centre, Veterinary Radiation Therapy Oncology Group study reveals potential efficacy of toceranib phosphate (Palladia) as a primary or adjuvant agent in the treatment of canine nasal carcinoma",
+        "authors": [{"name": "Ehling TJ"}, {"name": "Klein MK"}, {"name": "Smith L"}, {"name": "Prescott D"}, {"name": "Haney S"}, {"name": "Looper J"}, {"name": "LaDue T"}, {"name": "Brawner W"}, {"name": "Fidel J"}, {"name": "Shiomitsu K"}, {"name": "Green E"}, {"name": "Saba C"}, {"name": "Turek M"}, {"name": "Farrelly J"}],
+        "year": 2022,
+        "journal": "Veterinary and Comparative Oncology",
+        "doi": "10.1111/vco.12776",
+        "abstract": "Sixty-three dogs with nasal carcinoma were enrolled across ten sites to evaluate toceranib phosphate alone or combined with radiation therapy. Overall response rates were significantly improved in the toceranib plus RT arm (79.4%) and RT alone (68.9%) over toceranib alone (22%). Clinical benefit rates reached 97.3% in the combined treatment arm. Median survival times were 615 days (toceranib+RT), 368 days (RT alone), and 298 days (toceranib alone). Toceranib did not potentiate radiation side effects.",
+        "study_type": "prospective",
+        "sample_size": 63,
+    },
+    {
+        "title": "Retrospective evaluation of toceranib phosphate (Palladia) in the treatment of canine carcinomatosis and mesothelioma",
+        "authors": [{"name": "Hicks KA"}, {"name": "Leeper HJ"}, {"name": "Curran KM"}],
+        "year": 2024,
+        "journal": "Veterinary and Comparative Oncology",
+        "doi": "10.1111/vco.12972",
+        "abstract": "Toceranib phosphate effectiveness was evaluated in treating canine carcinomatosis and mesothelioma in 23 dogs. 82% presented with effusion. Best overall response rate was 30.4% comprising 13% complete responses and 17.3% partial responses. Stable disease occurred in 60.8% of cases. Grade 1 and 2 diarrhea or hyporexia were primary adverse effects. Median progression-free survival was 171 days and overall median survival was 301 days.",
+        "study_type": "retrospective",
+        "sample_size": 23,
+    },
+    {
+        "title": "Phase II evaluation of doxorubicin for treatment of various canine neoplasms",
+        "authors": [{"name": "Ogilvie GK"}, {"name": "Reynolds HA"}, {"name": "Richardson RC"}, {"name": "Withrow SJ"}, {"name": "Norris AM"}, {"name": "Henderson RA"}, {"name": "Klausner JS"}, {"name": "Fowler JD"}, {"name": "McCaw D"}],
+        "year": 1989,
+        "journal": "Journal of the American Veterinary Medical Association",
+        "doi": "",
+        "abstract": "185 dogs with confirmed malignant tumors were evaluated for responses to two doses of doxorubicin (30 mg/m2 IV, 21 days apart). Among 157 evaluable dogs, a partial or complete remission was obtained in 41% overall. Response rates by tumor type: lymphoma 67% (42/63), carcinoma 26% (11/43), sarcoma 22%. Various tumor types demonstrated partial to complete remissions. This study established doxorubicin as a broad-spectrum chemotherapy agent in veterinary oncology.",
+        "study_type": "prospective",
+        "sample_size": 185,
+    },
+    {
+        "title": "Toceranib phosphate (Palladia) for the treatment of canine exocrine pancreatic adenocarcinoma",
+        "authors": [{"name": "Musser ML"}, {"name": "Johannes CM"}],
+        "year": 2021,
+        "journal": "BMC Veterinary Research",
+        "doi": "10.1186/s12917-021-02978-8",
+        "abstract": "Eight dogs with confirmed pancreatic cancer were retrospectively analyzed for toceranib effectiveness. The medication was well tolerated across all patients. Among six treated with gross disease, four underwent imaging evaluation showing one partial response, two with stable disease, and one with progressive disease yielding a 75% clinical benefit rate. Median overall survival reached 89.5 days (range 14-506 days). Findings suggest toceranib demonstrates biological activity in canine pancreatic carcinoma.",
+        "study_type": "retrospective",
+        "sample_size": 8,
+    },
+    {
+        "title": "Canine intranasal tumours treated with alternating carboplatin and doxorubicin in conjunction with oral piroxicam: 29 cases",
+        "authors": [{"name": "Woodruff MJ"}, {"name": "Heading KL"}, {"name": "Bennett P"}],
+        "year": 2019,
+        "journal": "Veterinary and Comparative Oncology",
+        "doi": "10.1111/vco.12443",
+        "abstract": "Twenty-nine dogs with histologically confirmed nasal tumors received alternating carboplatin and doxorubicin with oral piroxicam between 2004-2017. Overall median survival was 234 days, with adenocarcinoma/carcinoma achieving 280 days and sarcomas 448 days. Adverse events occurred in approximately 69% but the chemotherapy protocol was generally well tolerated. Potential therapeutic benefit demonstrated for specific tumor types when chemotherapy is used as monotherapy.",
+        "study_type": "retrospective",
+        "sample_size": 29,
+    },
+    # === TOPIC 9: Prognosis and Staging ===
+    {
+        "title": "Thyroidectomy in dogs with thyroid tumors: Survival analysis in 144 cases (1994-2018)",
+        "authors": [{"name": "Enache D"}, {"name": "Ferro L"}, {"name": "Morello EM"}, {"name": "Massari F"}, {"name": "Romanelli G"}, {"name": "Nicoli S"}, {"name": "Guazzetti S"}, {"name": "Porporato F"}, {"name": "Zini E"}],
+        "year": 2023,
+        "journal": "Journal of Veterinary Internal Medicine",
+        "doi": "10.1111/jvim.16644",
+        "abstract": "Survival outcomes were analyzed in 144 dogs undergoing thyroidectomy for thyroid neoplasia. 77.4% survived beyond 500 days. Nonfollicular carcinomas, metastases at diagnosis, and adjuvant chemotherapy administration were associated with significantly elevated thyroid cancer mortality risk. Thrombosis occurred in 40 dogs and was associated with increased risk of death from other causes. Thyroidectomy remained a viable treatment consideration even in selected cases with metastatic disease.",
+        "study_type": "retrospective",
+        "sample_size": 144,
+    },
+    {
+        "title": "Canine thyroid carcinoma",
+        "authors": [{"name": "Liptak JM"}],
+        "year": 2007,
+        "journal": "Clinical Techniques in Small Animal Practice",
+        "doi": "10.1053/j.ctsap.2007.03.007",
+        "abstract": "Review of canine thyroid carcinoma examining malignant thyroid tumors which are relatively prevalent in dogs. Most tumors are unilateral and nonfunctional. Assessment should determine whether tumors are mobile or fixed/invasive. Surgical removal is advised for unilateral mobile carcinomas while radiation or radioactive iodine suits invasive or bilateral cases. Adjunctive chemotherapy is considered for high-risk tumors. The prognosis is good following surgical treatment of mobile thyroid tumors and irradiation of fixed thyroid carcinomas, with median survival times greater than 3 years.",
+        "study_type": "review",
+        "sample_size": None,
+    },
+    {
+        "title": "Canine thyroid carcinomas: A review with emphasis on comparing the compact subtype of follicular thyroid carcinomas and medullary thyroid carcinomas",
+        "authors": [{"name": "Athey JM"}, {"name": "Vieson MD"}, {"name": "Bailey K"}, {"name": "Rudmann D"}, {"name": "Baumgartner WA"}, {"name": "Selting KA"}],
+        "year": 2024,
+        "journal": "Veterinary Pathology",
+        "doi": "10.1177/03009858231177225",
+        "abstract": "This review focuses on differentiating compact follicular thyroid carcinoma from medullary thyroid carcinoma in dogs. Both subtypes share similar histomorphologic features which can lead to misclassification. Accurate distinction is important for prognostication and treatment planning. The review discusses histopathological features, immunohistochemistry panels, and clinical behavior differences between these subtypes.",
+        "study_type": "review",
+        "sample_size": None,
+    },
+    # === TOPIC 10: Differential Diagnosis ===
+    {
+        "title": "Diagnosis of mediastinal masses in dogs by flow cytometry",
+        "authors": [{"name": "Lana S"}, {"name": "Plaza S"}, {"name": "Hampe K"}, {"name": "Burnett R"}, {"name": "Avery AC"}],
+        "year": 2006,
+        "journal": "Journal of Veterinary Internal Medicine",
+        "doi": "10.1892/0891-6640(2006)20[1161:dommid]2.0.co;2",
+        "abstract": "Flow cytometry was investigated for differentiating thymoma from lymphoma in canine mediastinal masses. All six thymoma cases contained 10% or more lymphocytes coexpressing CD4 and CD8, characteristic of thymocytes. Six of seven lymphomas contained less than 2% CD4+CD8+ lymphocytes. Flow cytometry successfully identified lymphocyte-rich mediastinal masses in all 13 cases studied, potentially reducing the need for invasive surgical biopsies. CD4+CD8+ double-positive lymphocytes greater than 10% is highly specific for thymoma.",
+        "study_type": "prospective",
+        "sample_size": 13,
+    },
+    {
+        "title": "Radiographic Differentiation of Cranial Mediastinal Lymphomas from Thymic Epithelial Tumors in Dogs and Cats",
+        "authors": [{"name": "Oura TJ"}, {"name": "Hamel PE"}, {"name": "Jennings SH"}, {"name": "Bain PE"}, {"name": "Jennings DE"}, {"name": "Berg J"}],
+        "year": 2019,
+        "journal": "Journal of the American Animal Hospital Association",
+        "doi": "10.5326/JAAHA-MS-6907",
+        "abstract": "Thoracic radiographic findings were examined to differentiate between lymphomas and thymic epithelial tumors in 62 dogs and 28 cats across 17 radiographic criteria. In dogs, cranial mediastinal masses with at least two well-defined radiographic margins on a lateral view and those causing rightward cardiac shift were significantly more suggestive of epithelial tumors rather than lymphomas. Radiographic evaluation may provide preliminary diagnostic guidance but does not eliminate the need for tissue sampling.",
+        "study_type": "retrospective",
+        "sample_size": 90,
+    },
+    {
+        "title": "Patient Characteristics, Prognostic Factors and Outcome of Dogs with High-Grade Primary Mediastinal Lymphoma",
+        "authors": [{"name": "Moore EL"}, {"name": "Vernau W"}, {"name": "Rebhun RB"}, {"name": "Skorupski KA"}, {"name": "Burton JH"}],
+        "year": 2018,
+        "journal": "Veterinary and Comparative Oncology",
+        "doi": "10.1111/vco.12331",
+        "abstract": "Forty-two dogs with high-grade primary mediastinal lymphoma were retrospectively evaluated. Common presenting signs included lethargy, anorexia, and polyuria/polydipsia. Hypercalcemia and pleural effusion were frequently observed at diagnosis. Nearly all cases exhibited T-cell phenotype typically paired with lymphoblastic morphology per WHO classification. Median progression-free and overall survival reached 133 and 183 days respectively. CHOP chemotherapy demonstrated improved outcomes. Absence of pleural effusion associated with better overall survival.",
+        "study_type": "retrospective",
+        "sample_size": 42,
+    },
+    {
+        "title": "Cytokeratin and vimentin co-expression in 21 canine primary pulmonary epithelial neoplasms",
+        "authors": [{"name": "Burgess HJ"}, {"name": "Kerr ME"}],
+        "year": 2009,
+        "journal": "Journal of Veterinary Diagnostic Investigation",
+        "doi": "10.1177/104063870902100607",
+        "abstract": "Twenty-one canine primary pulmonary epithelial neoplasms were evaluated for cytokeratin and vimentin expression. All neoplasms stained positive for cytokeratin while only 8 (38%) stained positive for both cytokeratin and vimentin. Adenocarcinomas were the predominant histologic type. Papillary adenocarcinomas were consistently vimentin negative while anaplastic patterns demonstrated elevated vimentin staining. The frequency of co-expression matched patterns observed in human pulmonary tumors.",
+        "study_type": "prospective",
+        "sample_size": 21,
+    },
+    {
+        "title": "Rapid immunocytochemistry for the detection of cytokeratin and vimentin: assessment of its diagnostic value in neoplastic diseases of dogs",
+        "authors": [{"name": "Sawa M"}, {"name": "Inoue M"}, {"name": "Yabuki A"}, {"name": "Kohyama M"}, {"name": "Miyoshi N"}, {"name": "Setoguchi A"}, {"name": "Yamato O"}],
+        "year": 2017,
+        "journal": "Veterinary Clinical Pathology",
+        "doi": "10.1111/vcp.12462",
+        "abstract": "A rapid immunocytochemistry method for detecting cytokeratin and vimentin markers was evaluated in 30 canine tumor samples. The rapid method detected specific signals in 83.3% of cases with almost perfect agreement (kappa=0.857) for both markers in nonepithelial tumors and fair agreement in epithelial tumors compared to standard IHC. This approach serves as a practical diagnostic tool for distinguishing epithelial from non-epithelial tumor cell origins in veterinary cytology.",
+        "study_type": "prospective",
+        "sample_size": 30,
+    },
+]
+
+# Combined list for seeding
+SEED_PAPERS: list[dict] = SEED_PAPERS + CANINE_CARCINOMA_PAPERS
