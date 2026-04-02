@@ -128,6 +128,7 @@ class PgPaperRepository:
                     embedding=list(row["embedding"]),
                     token_count=row["token_count"],
                     created_at=row["created_at"],
+                    similarity=1.0 - float(row["distance"]),  # cosine distance → similarity
                 )
                 for row in rows
             ]

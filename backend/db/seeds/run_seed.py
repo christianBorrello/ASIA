@@ -26,8 +26,9 @@ async def _seed(database_url: str) -> None:
     from asia.domain.models import Chunk, Paper
     from db.seeds.seed_papers import SEED_PAPERS
 
+    model_name = os.environ.get("EMBEDDING_MODEL_NAME", "paraphrase-multilingual-MiniLM-L12-v2")
     repo = PgPaperRepository(database_url)
-    embedder = SentenceTransformerEmbedder()
+    embedder = SentenceTransformerEmbedder(model_name=model_name)
 
     total = len(SEED_PAPERS)
     inserted = 0

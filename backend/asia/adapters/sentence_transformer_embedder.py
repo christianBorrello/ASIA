@@ -5,9 +5,9 @@ from sentence_transformers import SentenceTransformer
 
 
 class SentenceTransformerEmbedder:
-    """Produces 384-dimensional embeddings using all-MiniLM-L6-v2."""
+    """Produces 384-dimensional embeddings. Default: multilingual model for IT+EN."""
 
-    def __init__(self, model_name: str = "all-MiniLM-L6-v2") -> None:
+    def __init__(self, model_name: str = "paraphrase-multilingual-MiniLM-L12-v2") -> None:
         self._model = SentenceTransformer(model_name)
 
     def embed_text(self, text: str) -> list[float]:
