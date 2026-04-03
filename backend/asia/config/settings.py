@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     GROQ_MAX_RETRIES: int = 2
     EMBEDDING_MODEL_NAME: str = "paraphrase-multilingual-MiniLM-L12-v2"
     EMBEDDING_DIMENSION: int = 384
-    RETRIEVAL_TOP_K: int = 10
+    RETRIEVAL_TOP_K: int = 20
     CONFIDENCE_THRESHOLD: float = 0.35
 
     model_config = {"env_prefix": "", "case_sensitive": True}
