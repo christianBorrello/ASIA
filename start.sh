@@ -164,8 +164,8 @@ echo -e "${BLUE}[backend]${RESET}  Avvio FastAPI (porta 8000)..."
 export DATABASE_URL="postgresql+asyncpg://asia:asia@localhost:5432/asia"
 
 cd backend
-python3 -m uvicorn asia.main:app --host 0.0.0.0 --port 8000 --reload \
-    > "$LOG_DIR/backend.log" 2>&1 &
+python3 -m uvicorn asia.main:app --host 0.0.0.0 --port 8000 --reload --log-level warning \
+    </dev/null >"$LOG_DIR/backend.log" 2>&1 &
 BACKEND_PID=$!
 cd "$SCRIPT_DIR"
 
@@ -202,7 +202,7 @@ echo -e "${CYAN}[frontend]${RESET} Avvio Next.js (porta 3000)..."
 
 cd frontend
 NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev \
-    > "$LOG_DIR/frontend.log" 2>&1 &
+    </dev/null >"$LOG_DIR/frontend.log" 2>&1 &
 FRONTEND_PID=$!
 cd "$SCRIPT_DIR"
 
