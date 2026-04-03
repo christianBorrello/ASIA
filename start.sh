@@ -16,9 +16,11 @@ mkdir -p "$LOG_DIR"
 
 BACKEND_PID="" ; FRONTEND_PID="" ; DB_STARTED=false
 
-# Kill orphans
+# Kill orphans from previous runs (including stale tail processes)
 lsof -ti:8000 2>/dev/null | xargs kill -9 2>/dev/null || true
 lsof -ti:3000 2>/dev/null | xargs kill -9 2>/dev/null || true
+pkill -9 -f "tail.*asia.*log" 2>/dev/null || true
+pkill -9 -f "tail.*\.logs.*log" 2>/dev/null || true
 
 cleanup() {
     trap - SIGINT SIGTERM EXIT  # prevent double cleanup
