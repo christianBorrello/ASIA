@@ -21,13 +21,16 @@ lsof -ti:8000 2>/dev/null | xargs kill -9 2>/dev/null || true
 lsof -ti:3000 2>/dev/null | xargs kill -9 2>/dev/null || true
 
 cleanup() {
+    trap - SIGINT SIGTERM EXIT  # prevent double cleanup
     echo ""
     echo -e "${Y}Arresto servizi...${RST}"
-    [[ -n "$FRONTEND_PID" ]] && kill "$FRONTEND_PID" 2>/dev/null; wait "$FRONTEND_PID" 2>/dev/null || true
-    [[ -n "$BACKEND_PID" ]]  && kill "$BACKEND_PID"  2>/dev/null; wait "$BACKEND_PID"  2>/dev/null || true
-    $DB_STARTED && docker compose down -t 5 >/dev/null 2>&1 || true
+    [[ -n "$FRONTEND_PID" ]] && kill "$FRONTEND_PID" 2>/dev/null || true
+    [[ -n "$BACKEND_PID" ]]  && kill "$BACKEND_PID"  2>/dev/null || true
+    sleep 1
+    # Force kill anything remaining
     lsof -ti:8000 2>/dev/null | xargs kill -9 2>/dev/null || true
     lsof -ti:3000 2>/dev/null | xargs kill -9 2>/dev/null || true
+    $DB_STARTED && docker compose down -t 3 >/dev/null 2>&1 || true
     echo -e "${G}Fatto.${RST}"
     exit 0
 }
@@ -48,7 +51,7 @@ command -v python3 &>/dev/null|| { echo -e "${R}Python3 non trovato${RST}"; exit
 
 if [[ ! -f .env ]]; then
     [[ -f .env.example ]] && cp .env.example .env || echo "GROQ_API_KEY=" > .env
-    echo -e "${Y}Creato .env — configura GROQ_API_KEY (https://console.groq.com)${RST}"
+    echo -e "${Y}Creato .env — configura GROQ_API_KEY${RST}"
 fi
 set -a; source .env 2>/dev/null || true; set +a
 [[ -z "${GROQ_API_KEY:-}" ]] && echo -e "${Y}GROQ_API_KEY non configurata${RST}"
@@ -64,62 +67,77 @@ for i in $(seq 1 30); do
 done
 echo -e "${G}[db]${RST}       Pronto"
 
-# --- 2. Backend (completely detached via script) ---
-echo -e "${B}[backend]${RST}  Avvio FastAPI..."
+# --- 2. Backend ---
+echo -en "${B}[backend]${RST}  Avvio FastAPI..."
 export DATABASE_URL="postgresql+asyncpg://asia:asia@localhost:5432/asia"
 
-# Write a launcher script to fully isolate the process
-cat > "$LOG_DIR/.run_backend.sh" << 'LAUNCHER'
-#!/usr/bin/env bash
-export HF_HUB_DISABLE_PROGRESS_BARS=1
-export TOKENIZERS_PARALLELISM=false
-export PYTHONWARNINGS="ignore"
-export TRANSFORMERS_VERBOSITY=error
-export HF_HUB_DISABLE_TELEMETRY=1
-export HF_HUB_OFFLINE=0
-exec python3 -m uvicorn asia.main:app --host 0.0.0.0 --port 8000 --reload --log-level error
-LAUNCHER
-chmod +x "$LOG_DIR/.run_backend.sh"
-
-cd backend
-nohup bash "$LOG_DIR/.run_backend.sh" >"$LOG_DIR/backend.log" 2>&1 &
-BACKEND_PID=$!
-cd "$SCRIPT_DIR"
+# Use python3 to launch uvicorn in a completely detached process
+python3 -c "
+import subprocess, os, sys
+env = dict(os.environ)
+env['HF_HUB_DISABLE_PROGRESS_BARS'] = '1'
+env['TOKENIZERS_PARALLELISM'] = 'false'
+env['PYTHONWARNINGS'] = 'ignore'
+env['TRANSFORMERS_VERBOSITY'] = 'error'
+env['HF_HUB_DISABLE_TELEMETRY'] = '1'
+log = open('$LOG_DIR/backend.log', 'w')
+p = subprocess.Popen(
+    [sys.executable, '-m', 'uvicorn', 'asia.main:app',
+     '--host', '0.0.0.0', '--port', '8000', '--reload', '--log-level', 'error'],
+    cwd='$SCRIPT_DIR/backend',
+    stdout=log, stderr=log, stdin=subprocess.DEVNULL,
+    start_new_session=True, env=env
+)
+print(p.pid)
+" > "$LOG_DIR/.backend_pid"
+BACKEND_PID=$(cat "$LOG_DIR/.backend_pid")
 
 for i in $(seq 1 90); do
     curl -sf http://localhost:8000/api/health >/dev/null 2>&1 && break
-    kill -0 "$BACKEND_PID" 2>/dev/null || { echo -e "${R}Backend crashato. Vedi .logs/backend.log${RST}"; exit 1; }
-    [[ $i -eq 90 ]] && { echo -e "${R}Backend timeout. Vedi .logs/backend.log${RST}"; exit 1; }
+    [[ $i -eq 90 ]] && { echo -e " ${R}timeout${RST}"; exit 1; }
     sleep 1
 done
-echo -e "${B}[backend]${RST}  Pronto"
+echo -e " Pronto"
 
-# --- 3. Frontend (completely detached via nohup) ---
-echo -e "${C}[frontend]${RST} Avvio Next.js..."
+# --- 3. Frontend ---
+echo -en "${C}[frontend]${RST} Avvio Next.js..."
 
 cd frontend
 npm install --silent >/dev/null 2>&1 || true
-nohup env NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev >"$LOG_DIR/frontend.log" 2>&1 &
-FRONTEND_PID=$!
 cd "$SCRIPT_DIR"
+
+python3 -c "
+import subprocess, os
+env = dict(os.environ)
+env['NEXT_PUBLIC_API_URL'] = 'http://localhost:8000'
+log = open('$LOG_DIR/frontend.log', 'w')
+p = subprocess.Popen(
+    ['npm', 'run', 'dev'],
+    cwd='$SCRIPT_DIR/frontend',
+    stdout=log, stderr=log, stdin=subprocess.DEVNULL,
+    start_new_session=True, env=env
+)
+print(p.pid)
+" > "$LOG_DIR/.frontend_pid"
+FRONTEND_PID=$(cat "$LOG_DIR/.frontend_pid")
 
 for i in $(seq 1 30); do
     curl -sf http://localhost:3000 >/dev/null 2>&1 && break
-    [[ $i -eq 30 ]] && echo -e "${Y}Frontend lento...${RST}"
+    [[ $i -eq 30 ]] && echo -en " ${Y}lento${RST}"
     sleep 1
 done
-echo -e "${C}[frontend]${RST} Pronto"
+echo -e " Pronto"
 
 # --- Ready ---
 echo ""
-echo -e "${BOLD}${G}  ASIA pronta!${RST}"
+echo -e "  ${BOLD}${G}ASIA pronta!${RST}"
 echo -e "  Frontend  ${BOLD}http://localhost:3000${RST}"
 echo -e "  Backend   ${BOLD}http://localhost:8000${RST}"
 echo -e "  API docs  ${BOLD}http://localhost:8000/docs${RST}"
-echo -e "  ${DIM}Ctrl+C per arrestare${RST}"
+echo -e "  ${DIM}Ctrl+C per arrestare · Log in .logs/${RST}"
 echo ""
 
-# Wait silently
+# Wait
 while kill -0 "$BACKEND_PID" 2>/dev/null && kill -0 "$FRONTEND_PID" 2>/dev/null; do
     sleep 2
 done
